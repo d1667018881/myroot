@@ -227,7 +227,7 @@
         manifest.devices.forEach(function(d, i) {
           var opt = document.createElement('option');
           opt.value = i;
-          opt.textContent = d.name + ' (' + (d.kernel || '未知内核') + ')';
+          opt.textContent = d.kernel ? d.name + ' · ' + d.kernel : d.name;
           sel.appendChild(opt);
         });
         sel.disabled = false;
