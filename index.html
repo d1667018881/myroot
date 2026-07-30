@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>myroot</title>
+  <link rel="stylesheet" href="Assets/modal.css" />
+  <style>
+    @font-face {
+      font-family: 'Noto Sans CJK SC';
+      src: url('Assets/NotoSansCJKsc-Regular.ttf') format('truetype');
+      font-weight: normal;
+      font-style: normal;
+    }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      user-select: none;
+      text-decoration: none;
+      transition: background-color 0.25s, border-color 0.25s, box-shadow 0.25s, opacity 0.25s, transform 0.25s, filter 0.25s, color 0.25s;
+    }
+    body {
+      overflow-x: hidden;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      --color: #E1E1E1;
+      background-color: #F3F3F3;
+      background-image: linear-gradient(0deg, transparent 24%, var(--color) 25%, var(--color) 26%, transparent 27%,transparent 74%, var(--color) 75%, var(--color) 76%, transparent 77%,transparent),
+      linear-gradient(90deg, transparent 24%, var(--color) 25%, var(--color) 26%, transparent 27%,transparent 74%, var(--color) 75%, var(--color) 76%, transparent 77%,transparent);
+      background-size: 55px 55px;
+      font-family: 'Noto Sans CJK SC', '微软雅黑', 'PingFang SC', sans-serif;
+    }
+    .warning-icon svg {
+      width: 22px;
+      height: 22px;
+    }
+    #container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.2rem;
+      width: 90%;
+      max-width: 560px;
+    }
+    .panel {
+      width: 100%;
+      background: rgba(42, 42, 42, 0.92);
+      border-radius: 16px;
+      padding: 1.2rem 1.5rem;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .panel-title {
+      color: #f0f0f0;
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 0.8rem;
+      letter-spacing: 0.3px;
+    }
+    #device-selector {
+      width: 100%;
+      padding: 10px 14px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.15);
+      background: rgba(30, 30, 30, 0.9);
+      color: #f0f0f0;
+      font-size: 14px;
+      font-family: inherit;
+      outline: none;
+      cursor: pointer;
+      margin-bottom: 0.8rem;
+    }
+    #device-selector option {
+      background: #1e1e1e;
+      color: #f0f0f0;
+    }
+    #device-selector:focus {
+      border-color: rgba(80, 160, 255, 0.5);
+    }
+    .btn-row {
+      display: flex;
+      gap: 10px;
+      width: 100%;
+    }
+    .btn {
+      flex: 1;
+      padding: 10px 14px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.15);
+      font-size: 14px;
+      font-family: inherit;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s;
+    }
+    .btn-primary {
+      background: rgba(60, 120, 220, 0.85);
+      color: #fff;
+    }
+    .btn-primary:hover {
+      background: rgba(60, 120, 220, 1);
+      transform: translateY(-1px);
+    }
+    .btn-primary:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .btn-secondary {
+      background: rgba(62, 62, 62, 0.85);
+      color: #f5f5f5;
+    }
+    .btn-secondary:hover {
+      background: rgba(80, 80, 80, 0.9);
+      transform: translateY(-1px);
+    }
+    .badge {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      margin-left: 6px;
+    }
+    .badge-ok { background: rgba(40, 180, 70, 0.25); color: #5cd87a; }
+    .badge-warn { background: rgba(220, 160, 40, 0.25); color: #f0c040; }
+    .badge-fail { background: rgba(200, 60, 60, 0.25); color: #ff6b6b; }
+    #status-bar {
+      font-size: 12px;
+      color: rgba(255,255,255,0.5);
+      text-align: center;
+    }
+    @media (max-width: 480px) {
+      body { background-size: 25px 25px; padding: 0.75rem; }
+      .panel { padding: 1rem; }
+    }
+  </style>
+</head>
+<body>
+  <div id="container">
+    <!-- 设备选择面板 -->
+    <div class="panel">
+      <div class="panel-title">
+        设备选择
+        <span id="manifest-status" class="badge badge-warn">加载中</span>
+      </div>
+      <select id="device-selector" disabled>
+        <option value="">— 正在加载设备列表 —</option>
+      </select>
+      <div class="btn-row">
+        <button id="btn-verify" class="btn btn-secondary" disabled>校验 .so</button>
+        <button id="btn-run" class="btn btn-primary" disabled>获取 Root</button>
+      </div>
+      <div id="status-bar" style="margin-top:8px;">初始化中...</div>
+    </div>
+
+    <!-- 终端面板 -->
+    <div class="panel" style="padding:0;overflow:hidden;">
+      <div id="out" style="white-space:pre-wrap;word-break:break-all;font-family:monospace;padding:16px 16px 80px;color:#e0e0e0;font-weight:500;font-size:13px;line-height:1.5;min-height:200px;max-height:400px;overflow-y:auto;"></div>
+      <input id="cmd" style="width:100%;box-sizing:border-box;padding:10px 16px;border:none;border-top:1px solid rgba(255,255,255,0.08);background:rgba(30,30,30,0.95);color:#f0f0f0;font-size:13px;font-family:monospace;outline:none;" autofocus placeholder="Shell 就绪后在此输入命令 (exit 退出)">
+    </div>
+  </div>
+
+  <script src="Assets/modal.js"></script>
+  <script src="ansi.js"></script>
+  <script src="exploit.js"></script>
+  <script>
+    // ====== manifest 加载 ======
+    let manifest = null;
+    const sel = document.getElementById('device-selector');
+    const btnVerify = document.getElementById('btn-verify');
+    const btnRun = document.getElementById('btn-run');
+    const statusBar = document.getElementById('status-bar');
+    const manifestStatus = document.getElementById('manifest-status');
+
+    async function loadManifest() {
+      try {
+        const resp = await fetch('manifest.json?t=' + Date.now(), { cache: 'no-store' });
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        manifest = await resp.json();
+        if (!manifest.devices || manifest.devices.length === 0) throw new Error('设备列表为空');
+        
+        sel.innerHTML = '<option value="">— 请选择设备 —</option>';
+        manifest.devices.forEach(function(d, i) {
+          var opt = document.createElement('option');
+          opt.value = i;
+          opt.textContent = d.name + ' (' + (d.kernel || '未知内核') + ')';
+          sel.appendChild(opt);
+        });
+        sel.disabled = false;
+        btnVerify.disabled = true;
+        btnRun.disabled = true;
+        manifestStatus.textContent = '已加载 ' + manifest.devices.length + ' 个设备';
+        manifestStatus.className = 'badge badge-ok';
+        statusBar.textContent = '请选择你的设备';
+      } catch (e) {
+        manifestStatus.textContent = '加载失败';
+        manifestStatus.className = 'badge badge-fail';
+        statusBar.textContent = 'manifest.json 加载失败: ' + e.message;
+        sel.innerHTML = '<option value="">— 加载失败 —</option>';
+      }
+    }
+
+    // 设备切换
+    sel.addEventListener('change', function() {
+      const idx = parseInt(this.value);
+      if (isNaN(idx) || !manifest || !manifest.devices[idx]) {
+        btnVerify.disabled = true;
+        btnRun.disabled = true;
+        statusBar.textContent = '请选择设备';
+        return;
+      }
+      btnVerify.disabled = false;
+      btnRun.disabled = true;
+      statusBar.textContent = '已选择: ' + manifest.devices[idx].name + '，建议先校验 .so';
+    });
+
+    // ====== SHA256 校验 ======
+    async function sha256(buffer) {
+      var hash = await crypto.subtle.digest('SHA-256', buffer);
+      var hex = '';
+      var bytes = new Uint8Array(hash);
+      for (var i = 0; i < bytes.length; i++) {
+        hex += bytes[i].toString(16).padStart(2, '0');
+      }
+      return hex;
+    }
+
+    var verifiedSoPath = null;
+    var verifiedSoName = null;
+
+    btnVerify.addEventListener('click', async function() {
+      var idx = parseInt(sel.value);
+      if (isNaN(idx) || !manifest || !manifest.devices[idx]) return;
+      var device = manifest.devices[idx];
+      
+      btnVerify.disabled = true;
+      btnVerify.textContent = '校验中...';
+      statusBar.textContent = '正在下载 ' + device.so + ' ...';
+      
+      try {
+        var resp = await fetch(device.so, { cache: 'no-store' });
+        if (!resp.ok) throw new Error('下载失败: HTTP ' + resp.status);
+        var buf = await resp.arrayBuffer();
+        
+        statusBar.textContent = '正在计算 SHA256 ...';
+        var hash = await sha256(buf);
+        
+        if (hash.toLowerCase() !== device.sha256.toLowerCase()) {
+          throw new Error(
+            'SHA256 不匹配!\n预期: ' + device.sha256 + '\n实际: ' + hash + '\n\n文件可能已被篡改，请重新获取。'
+          );
+        }
+        
+        verifiedSoPath = device.so;
+        verifiedSoName = device.name;
+        btnRun.disabled = false;
+        btnVerify.textContent = '✅ 校验通过';
+        statusBar.textContent = device.name + ' SHA256 验证通过，可执行 Root';
+      } catch (e) {
+        btnVerify.textContent = '❌ 校验失败';
+        btnRun.disabled = true;
+        verifiedSoPath = null;
+        statusBar.textContent = '';
+        if (typeof customAlert === 'function') {
+          customAlert('校验失败: ' + e.message);
+        } else {
+          alert('校验失败: ' + e.message);
+        }
+      }
+    });
+
+    // ====== 执行 Root ======
+    btnRun.addEventListener('click', async function() {
+      if (!verifiedSoPath) {
+        if (typeof customAlert === 'function') customAlert('请先校验 .so 文件');
+        return;
+      }
+      if (!window.uploadSoAndRun) {
+        if (typeof customAlert === 'function') customAlert('JIT Exploit 尚未完成，请等待');
+        return;
+      }
+      
+      btnRun.disabled = true;
+      btnRun.textContent = '执行中...';
+      statusBar.textContent = '正在上传 .so 并提权...';
+      
+      await window.uploadSoAndRun(verifiedSoPath);
+      
+      btnRun.textContent = '执行完成';
+      statusBar.textContent = verifiedSoName + ' 提权流程结束，查看终端输出';
+    });
+
+    // ====== 启动 ======
+    loadManifest();
+  </script>
+</body>
+</html>
