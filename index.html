@@ -6,19 +6,11 @@
   <title>myroot</title>
   <link rel="stylesheet" href="Assets/modal.css" />
   <style>
-    @font-face {
-      font-family: 'Noto Sans CJK SC';
-      src: url('Assets/NotoSansCJKsc-Regular.ttf') format('truetype');
-      font-weight: normal;
-      font-style: normal;
-    }
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
-      user-select: none;
       text-decoration: none;
-      transition: background-color 0.25s, border-color 0.25s, box-shadow 0.25s, opacity 0.25s, transform 0.25s, filter 0.25s, color 0.25s;
     }
     body {
       overflow-x: hidden;
@@ -26,47 +18,39 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      --color: #E1E1E1;
-      background-color: #F3F3F3;
-      background-image: linear-gradient(0deg, transparent 24%, var(--color) 25%, var(--color) 26%, transparent 27%,transparent 74%, var(--color) 75%, var(--color) 76%, transparent 77%,transparent),
-      linear-gradient(90deg, transparent 24%, var(--color) 25%, var(--color) 26%, transparent 27%,transparent 74%, var(--color) 75%, var(--color) 76%, transparent 77%,transparent);
-      background-size: 55px 55px;
-      font-family: 'Noto Sans CJK SC', '微软雅黑', 'PingFang SC', sans-serif;
-    }
-    .warning-icon svg {
-      width: 22px;
-      height: 22px;
+      background: linear-gradient(145deg, #0a0a0f 0%, #14141f 50%, #0d0d18 100%);
+      font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
     }
     #container {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 1.2rem;
-      width: 90%;
-      max-width: 560px;
+      gap: 1rem;
+      width: 92%;
+      max-width: 540px;
     }
     .sep-line {
       width: 100%;
       height: 1px;
-      background: rgba(255,255,255,0.08);
-      margin: 0.4rem 0;
+      background: linear-gradient(90deg, transparent, rgba(120, 80, 255, 0.2), transparent);
+      margin: 0.3rem 0;
     }
     .local-area {
       width: 100%;
       display: flex;
       flex-direction: column;
-      gap: 0.6rem;
+      gap: 0.5rem;
     }
     #local-file-name {
       font-size: 12px;
-      color: rgba(255,255,255,0.5);
+      color: rgba(255,255,255,0.45);
       word-break: break-all;
     }
     #local-sha256 {
       font-size: 11px;
-      color: rgba(255,255,255,0.35);
+      color: rgba(255,255,255,0.25);
       word-break: break-all;
-      font-family: monospace;
+      font-family: 'SF Mono', 'Fira Code', monospace;
     }
     .file-input-wrap {
       display: flex;
@@ -78,38 +62,41 @@
     }
     .panel {
       width: 100%;
-      background: rgba(42, 42, 42, 0.92);
-      border-radius: 16px;
-      padding: 1.2rem 1.5rem;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(18, 18, 30, 0.85);
+      border-radius: 20px;
+      padding: 1.2rem 1.4rem;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(120, 80, 255, 0.12);
+      box-shadow: 0 4px 24px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.04);
     }
     .panel-title {
-      color: #f0f0f0;
-      font-size: 15px;
+      color: rgba(255,255,255,0.85);
+      font-size: 14px;
       font-weight: 600;
       margin-bottom: 0.8rem;
-      letter-spacing: 0.3px;
+      letter-spacing: 0.5px;
     }
     #device-selector {
       width: 100%;
       padding: 10px 14px;
-      border-radius: 10px;
-      border: 1px solid rgba(255,255,255,0.15);
-      background: rgba(30, 30, 30, 0.9);
-      color: #f0f0f0;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(0,0,0,0.35);
+      color: #e0e0e0;
       font-size: 14px;
       font-family: inherit;
       outline: none;
       cursor: pointer;
       margin-bottom: 0.8rem;
+      transition: border-color 0.2s;
     }
     #device-selector option {
-      background: #1e1e1e;
-      color: #f0f0f0;
+      background: #0f0f1a;
+      color: #e0e0e0;
     }
     #device-selector:focus {
-      border-color: rgba(80, 160, 255, 0.5);
+      border-color: rgba(120, 80, 255, 0.4);
     }
     .btn-row {
       display: flex;
@@ -119,54 +106,88 @@
     .btn {
       flex: 1;
       padding: 10px 14px;
-      border-radius: 10px;
-      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 12px;
+      border: none;
       font-size: 14px;
       font-family: inherit;
       cursor: pointer;
       text-align: center;
+      font-weight: 500;
       transition: all 0.2s;
     }
     .btn-primary {
-      background: rgba(60, 120, 220, 0.85);
+      background: linear-gradient(135deg, rgba(120, 80, 255, 0.85), rgba(80, 60, 200, 0.85));
       color: #fff;
+      box-shadow: 0 2px 12px rgba(120, 80, 255, 0.2);
     }
     .btn-primary:hover {
-      background: rgba(60, 120, 220, 1);
       transform: translateY(-1px);
+      box-shadow: 0 4px 20px rgba(120, 80, 255, 0.35);
     }
     .btn-primary:disabled {
-      opacity: 0.4;
+      opacity: 0.3;
       cursor: not-allowed;
       transform: none;
+      box-shadow: none;
     }
     .btn-secondary {
-      background: rgba(62, 62, 62, 0.85);
-      color: #f5f5f5;
+      background: rgba(255,255,255,0.06);
+      color: rgba(255,255,255,0.7);
+      border: 1px solid rgba(255,255,255,0.08);
     }
     .btn-secondary:hover {
-      background: rgba(80, 80, 80, 0.9);
-      transform: translateY(-1px);
+      background: rgba(255,255,255,0.1);
+      color: #fff;
     }
     .badge {
       display: inline-block;
       padding: 2px 10px;
-      border-radius: 6px;
+      border-radius: 8px;
       font-size: 11px;
-      font-weight: 600;
+      font-weight: 500;
       margin-left: 6px;
     }
-    .badge-ok { background: rgba(40, 180, 70, 0.25); color: #5cd87a; }
-    .badge-warn { background: rgba(220, 160, 40, 0.25); color: #f0c040; }
-    .badge-fail { background: rgba(200, 60, 60, 0.25); color: #ff6b6b; }
+    .badge-ok { background: rgba(40, 180, 70, 0.15); color: #5cd87a; }
+    .badge-warn { background: rgba(220, 160, 40, 0.15); color: #f0c040; }
+    .badge-fail { background: rgba(200, 60, 60, 0.15); color: #ff6b6b; }
     #status-bar {
       font-size: 12px;
-      color: rgba(255,255,255,0.5);
+      color: rgba(255,255,255,0.35);
       text-align: center;
+      margin-top: 8px;
+    }
+    #out {
+      white-space:pre-wrap;
+      word-break:break-all;
+      font-family:'SF Mono','Fira Code','Cascadia Code',monospace;
+      padding:20px 20px 80px;
+      color:#d0d0e0;
+      font-weight:400;
+      font-size:13px;
+      line-height:1.6;
+      min-height:200px;
+      max-height:400px;
+      overflow-y:auto;
+      background:rgba(0,0,0,0.25);
+    }
+    #cmd {
+      width:100%;
+      box-sizing:border-box;
+      padding:12px 16px;
+      border:none;
+      border-top:1px solid rgba(120,80,255,0.1);
+      background:rgba(0,0,0,0.4);
+      color:#e0e0e0;
+      font-size:13px;
+      font-family:'SF Mono','Fira Code','Cascadia Code',monospace;
+      outline:none;
+    }
+    #cmd::placeholder {
+      color: rgba(255,255,255,0.2);
     }
     @media (max-width: 480px) {
-      body { background-size: 25px 25px; padding: 0.75rem; }
-      .panel { padding: 1rem; }
+      body { padding: 0.5rem; }
+      .panel { padding: 1rem; border-radius: 16px; }
     }
   </style>
 </head>
@@ -184,7 +205,7 @@
       <div class="btn-row">
         <button id="btn-run" class="btn btn-primary" disabled>获取 Root</button>
       </div>
-      <div id="status-bar" style="margin-top:8px;">初始化中...</div>
+      <div id="status-bar">初始化中...</div>
 
       <div class="sep-line"></div>
 
