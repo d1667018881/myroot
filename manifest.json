@@ -1,46 +1,46 @@
 {
   "version": 1,
-  "note": "hexo141/Rootme 搬运 — 全部已反编译验证，无恶意代码",
+  "note": "自用设备列表",
   "devices": [
     {
-      "name": "IQOO NEO11",
-      "kernel": "iQOO Neo11, 未知内核版本",
+      "name": "iQOO Neo11",
+      "kernel": "未知内核版本",
       "so": "so/iqoo_neo11.so",
       "sha256": "9033f24d366d78e2ea6a19d8e38a2c8c086dc174afd2c14af1d1efaa1db566de"
     },
     {
       "name": "OPPO Find X8",
-      "kernel": "OPPO Find X8, ColorOS 16.0.9",
+      "kernel": "ColorOS 16.0.9",
       "so": "so/oppo_findx8.so",
       "sha256": "48e4b1b8571fa3c318539ba267a8a82583f28aa613a57be78b1ba5105486d297"
     },
     {
       "name": "Realme RMX5200",
-      "kernel": "Realme RMX5200",
+      "kernel": "",
       "so": "so/realme_rmx5200.so",
       "sha256": "d2f4a9b29722909f459414ca8c2555f418f84899840162276aaa3ea8172f959d"
     },
     {
-      "name": "Redmi K80Ultra OS2",
-      "kernel": "Redmi K80 Ultra, OS2 (含 KernelSU)",
+      "name": "Redmi K80 Ultra (OS2)",
+      "kernel": "含 KernelSU",
       "so": "so/redmi_k80ultra_os2.so",
       "sha256": "63a553ac0a6f209229a849f36128b3cc4786ba0725d7c64023ce6155512a22ea"
     },
     {
-      "name": "Redmi K80Ultra OS3",
-      "kernel": "Redmi K80 Ultra, OS3 (含 KernelSU)",
+      "name": "Redmi K80 Ultra (OS3)",
+      "kernel": "含 KernelSU",
       "so": "so/redmi_k80ultra_os3.so",
       "sha256": "e0513aa28c8440ba7abfe8bad262e2a40202ea48e7f6bab840b153c1c295742d"
     },
     {
-      "name": "通用核心(arm)",
-      "kernel": "通用 GhostLock 纯 exploit 核心，无 su 守护进程",
+      "name": "通用核心 (arm)",
+      "kernel": "纯 exploit，无 su",
       "so": "so/arm.so",
       "sha256": "13cedfe3c9e39e84074ab18b3a2bf214b3c184eb2094c4ed151a1d7c9eebee7a"
     },
     {
-      "name": "作业帮学习机T20Pro+",
-      "kernel": "作业帮学习机 T20Pro+, 5.2.0",
+      "name": "作业帮学习机 T20Pro+",
+      "kernel": "5.2.0",
       "so": "so/zuoyebang.so",
       "sha256": "07cd69954e08439a362f6a7886272a1e7eb7c065f84058dcaa88685cac8fc490"
     }
