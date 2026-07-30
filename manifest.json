@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "note": "添加新设备: 1) 把 .so 文件放入 so/ 目录 2) 运行 scripts/update-manifest.sh",
+  "devices": [
+    {
+      "name": "示例设备",
+      "kernel": "5.10.xxx-android12-xx",
+      "so": "so/example.so",
+      "sha256": "请运行 scripts/update-manifest.sh 自动生成",
+      "note": "这是一个示例条目，请用你的实际设备和 .so 替换"
+    }
+  ]
+}
