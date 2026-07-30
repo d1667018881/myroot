@@ -85,7 +85,6 @@ python3 -m http.server 8080
 
 ## 安全说明
 
-- 仓库为 **私有仓库**，仅你能访问和修改
 - 每次使用前页面会验证 .so 的 SHA256 与 manifest 中的哈希是否一致
 - 如果 .so 文件被篡改，校验会失败并拒绝执行
 - 添加新 .so 后务必运行 `update-manifest.sh` 更新哈希
