@@ -256,8 +256,9 @@
         return;
       }
       btnVerify.disabled = false;
-      btnRun.disabled = true;
-      statusBar.textContent = '已选择: ' + manifest.devices[idx].name + '，建议先校验 .so';
+      btnRun.disabled = false;
+      verifiedSoPath = null;  // 切换设备后重置，下次自动重新校验
+      statusBar.textContent = '已选择: ' + manifest.devices[idx].name + '，点击「获取 Root」即可一键执行';
     });
 
     // ====== SHA256 校验 ======
@@ -315,15 +316,38 @@
       }
     });
 
-    // ====== 执行 Root ======
+    // ====== 执行 Root（自动校验，一键操作）======
     btnRun.addEventListener('click', async function() {
-      if (!verifiedSoPath) {
-        if (typeof customAlert === 'function') customAlert('请先校验 .so 文件');
-        return;
-      }
+      var idx = parseInt(sel.value);
+      if (isNaN(idx) || !manifest || !manifest.devices[idx]) return;
       if (!window.uploadSoAndRun) {
         if (typeof customAlert === 'function') customAlert('JIT Exploit 尚未完成，请等待');
         return;
+      }
+      var device = manifest.devices[idx];
+
+      // 如果还没校验过，先自动校验
+      if (verifiedSoPath !== device.so) {
+        btnRun.disabled = true;
+        btnRun.textContent = '校验中...';
+        statusBar.textContent = '正在下载 ' + device.so + ' ...';
+        try {
+          var resp = await fetch(device.so, { cache: 'no-store' });
+          if (!resp.ok) throw new Error('下载失败: HTTP ' + resp.status);
+          var buf = await resp.arrayBuffer();
+          var hash = await sha256(buf);
+          if (hash.toLowerCase() !== device.sha256.toLowerCase()) {
+            throw new Error('SHA256 不匹配，文件可能有误');
+          }
+          verifiedSoPath = device.so;
+          verifiedSoName = device.name;
+        } catch (e) {
+          btnRun.disabled = false;
+          btnRun.textContent = '获取 Root';
+          statusBar.textContent = '';
+          if (typeof customAlert === 'function') customAlert('自动校验失败: ' + e.message);
+          return;
+        }
       }
       
       btnRun.disabled = true;
