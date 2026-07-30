@@ -45,6 +45,37 @@
       width: 90%;
       max-width: 560px;
     }
+    .sep-line {
+      width: 100%;
+      height: 1px;
+      background: rgba(255,255,255,0.08);
+      margin: 0.4rem 0;
+    }
+    .local-area {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+    #local-file-name {
+      font-size: 12px;
+      color: rgba(255,255,255,0.5);
+      word-break: break-all;
+    }
+    #local-sha256 {
+      font-size: 11px;
+      color: rgba(255,255,255,0.35);
+      word-break: break-all;
+      font-family: monospace;
+    }
+    .file-input-wrap {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .file-input-wrap input[type="file"] {
+      display: none;
+    }
     .panel {
       width: 100%;
       background: rgba(42, 42, 42, 0.92);
@@ -155,6 +186,17 @@
         <button id="btn-run" class="btn btn-primary" disabled>获取 Root</button>
       </div>
       <div id="status-bar" style="margin-top:8px;">初始化中...</div>
+
+      <div class="sep-line"></div>
+
+      <div class="local-area">
+        <div class="file-input-wrap">
+          <button id="btn-local" class="btn btn-secondary" style="flex:none;padding:8px 14px;font-size:13px;">📁 本地上传 .so</button>
+          <span id="local-file-name" style="flex:1;">未选择文件</span>
+        </div>
+        <div id="local-sha256"></div>
+        <button id="btn-run-local" class="btn btn-primary" disabled>使用本地 .so 执行</button>
+      </div>
     </div>
 
     <!-- 终端面板 -->
@@ -292,6 +334,69 @@
       
       btnRun.textContent = '执行完成';
       statusBar.textContent = verifiedSoName + ' 提权流程结束，查看终端输出';
+    });
+
+    // ====== 本地 .so 上传 ======
+    var localSoFile = null;
+    var localSoHash = null;
+    var localSoDisplayed = false;
+
+    // 隐藏的文件输入
+    var fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = '.so,.so.*';
+    fileInput.style.display = 'none';
+    document.body.appendChild(fileInput);
+
+    document.getElementById('btn-local').addEventListener('click', function() {
+      fileInput.click();
+    });
+
+    fileInput.addEventListener('change', async function(e) {
+      var file = e.target.files[0];
+      if (!file) return;
+
+      document.getElementById('local-file-name').textContent = '📄 ' + file.name + ' (' + (file.size / 1024).toFixed(1) + ' KB)';
+      document.getElementById('local-sha256').textContent = 'SHA256: 计算中...';
+      document.getElementById('btn-run-local').disabled = true;
+
+      try {
+        var buf = await file.arrayBuffer();
+        var hash = await sha256(buf);
+        localSoFile = file;
+        localSoHash = hash;
+        document.getElementById('local-sha256').textContent = 'SHA256: ' + hash;
+        document.getElementById('btn-run-local').disabled = false;
+        statusBar.textContent = '本地文件已就绪: ' + file.name;
+      } catch (err) {
+        document.getElementById('local-sha256').textContent = 'SHA256: ❌ 计算失败';
+        if (typeof customAlert === 'function') {
+          customAlert('文件读取失败: ' + err.message);
+        }
+      }
+    });
+
+    // ====== 使用本地 .so 执行 ======
+    document.getElementById('btn-run-local').addEventListener('click', async function() {
+      if (!localSoFile) {
+        if (typeof customAlert === 'function') customAlert('请先选择本地的 .so 文件');
+        return;
+      }
+      if (!window.uploadSoAndRun) {
+        if (typeof customAlert === 'function') customAlert('JIT Exploit 尚未完成，请等待');
+        return;
+      }
+
+      var btn = document.getElementById('btn-run-local');
+      btn.disabled = true;
+      btn.textContent = '执行中...';
+      statusBar.textContent = '正在使用本地 .so 提权...';
+
+      // exploit.js 的 uploadSoAndRun 支持 File 对象，直接传
+      await window.uploadSoAndRun(localSoFile);
+
+      btn.textContent = '✅ 执行完成';
+      statusBar.textContent = '本地 .so 提权流程结束，查看终端输出';
     });
 
     // ====== 启动 ======
