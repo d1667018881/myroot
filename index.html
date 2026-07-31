@@ -221,8 +221,8 @@
 
     <!-- 终端面板 -->
     <div class="panel" style="padding:0;overflow:hidden;">
-      <div id="out" style="white-space:pre-wrap;word-break:break-all;font-family:monospace;padding:16px 16px 80px;color:#e0e0e0;font-weight:500;font-size:13px;line-height:1.5;min-height:200px;max-height:400px;overflow-y:auto;"></div>
-      <input id="cmd" style="width:100%;box-sizing:border-box;padding:10px 16px;border:none;border-top:1px solid rgba(255,255,255,0.08);background:rgba(30,30,30,0.95);color:#f0f0f0;font-size:13px;font-family:monospace;outline:none;" autofocus placeholder="Shell 就绪后在此输入命令 (exit 退出)">
+      <div id="out"></div>
+      <input id="cmd" autofocus placeholder="Shell 就绪后在此输入命令 (exit 退出)">
     </div>
   </div>
 
@@ -312,6 +312,17 @@
         if (typeof customAlert === 'function') customAlert('执行失败: ' + e.message);
       }
     });
+
+    // ====== SHA256 计算（仅用于本地文件信息展示）======
+    async function sha256(buffer) {
+      var hash = await crypto.subtle.digest('SHA-256', buffer);
+      var hex = '';
+      var bytes = new Uint8Array(hash);
+      for (var i = 0; i < bytes.length; i++) {
+        hex += bytes[i].toString(16).padStart(2, '0');
+      }
+      return hex;
+    }
 
     // ====== 本地 .so 上传 ======
     var localSoFile = null;
