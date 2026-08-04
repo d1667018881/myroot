@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ============================================================
-# update-manifest.sh — 扫描 so/ 目录，计算 SHA256，更新 manifest.json
+# update-manifest.sh — 扫描 so/ 目录，更新 manifest.json
 # 用法: ./scripts/update-manifest.sh
 # ============================================================
 set -euo pipefail
@@ -15,19 +15,6 @@ fi
 
 if [ ! -d "$SO_DIR" ]; then
   echo "❌ 找不到 $SO_DIR 目录"
-  exit 1
-fi
-
-# 检测可用哈希工具
-HASH_CMD=""
-if command -v sha256sum &>/dev/null; then
-  HASH_CMD="sha256sum"
-elif command -v shasum &>/dev/null; then
-  HASH_CMD="shasum -a 256"
-elif command -v openssl &>/dev/null; then
-  HASH_CMD="openssl dgst -sha256"
-else
-  echo "❌ 未找到 sha256sum/shasum/openssl，请安装其中任意一个"
   exit 1
 fi
 
@@ -68,7 +55,7 @@ fi
 
 # 生成 JSON
 echo "{"
-echo '  "version": 1,'
+echo '  "version": 2,'
 echo '  "note": "自动生成 — 运行 scripts/update-manifest.sh 可刷新此文件",'
 echo '  "devices": ['
 
@@ -77,24 +64,14 @@ for SO_PATH in "${SO_FILES[@]}"; do
   SO_FILE=$(basename "$SO_PATH")
   SO_REL="so/$SO_FILE"
   
-  # 计算哈希
-  HASH=""
-  if command -v sha256sum &>/dev/null; then
-    HASH=$(sha256sum "$SO_PATH" | cut -d' ' -f1)
-  elif command -v shasum &>/dev/null; then
-    HASH=$(shasum -a 256 "$SO_PATH" | cut -d' ' -f1)
-  elif command -v openssl &>/dev/null; then
-    HASH=$(openssl dgst -sha256 "$SO_PATH" | cut -d' ' -f2)
-  fi
-  
   # 保留已有的名称信息或使用文件名
   NAME="${EXISTING_NAMES[$SO_REL]:-${SO_FILE%.so}}"
-  KERNEL="${EXISTING_KERNELS[$SO_REL]:-未知}"
+  KERNEL="${EXISTING_KERNELS[$SO_REL]:-}"
   
   if [ "$FIRST" = false ]; then echo ","; fi
   FIRST=false
   
-  echo -n "    { \"name\": \"$NAME\", \"kernel\": \"$KERNEL\", \"so\": \"$SO_REL\", \"sha256\": \"$HASH\" }"
+  echo -n "    { \"name\": \"$NAME\", \"kernel\": \"$KERNEL\", \"so\": \"$SO_REL\" }"
 done
 
 echo ""
