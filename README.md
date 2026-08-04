@@ -8,7 +8,7 @@
 ├── index.html              ← 主页面（设备选择 + 终端）
 ├── exploit.js              ← JIT exploit + LD_PRELOAD 提权逻辑
 ├── ansi.js                 ← ANSI 终端渲染
-├── manifest.json           ← .so 文件清单（含 SHA256）
+├── manifest.json           ← .so 文件清单
 ├── Assets/
 │   ├── modal.css
 │   └── modal.js
@@ -56,16 +56,10 @@ git push
 
 ### 5. 部署
 
-**Cloudflare Pages（推荐，免费支持私有仓库）：**
+**GitHub Pages（已配置）：**
 
-1. 登录 [Cloudflare Dashboard](https://dash.cloudflare.com/)
-2. Workers & Pages → Pages → Create a Page → Connect to Git
-3. 授权 GitHub，选择 `d1667018881/myroot`
-4. 构建设置：
-   - 框架预设: **None**
-   - 构建命令: _(留空)_
-   - 构建输出目录: **`/`** (或留空)
-5. 部署完成会自动分配 `xxx.pages.dev` 域名
+仓库已启用 GitHub Pages，推送后自动部署。
+访问地址：https://d1667018881.github.io/myroot/
 
 **本地测试：**
 
@@ -78,17 +72,15 @@ python3 -m http.server 8080
 
 1. 手机安装 Firefox 151.0 arm64（archive.mozilla.org 可下载旧版）
 2. 用 Firefox 打开部署后的网址
-3. 选择你的设备型号
-4. 点击「校验 .so」— 页面会计算 SHA256 并对比 manifest，防止文件被篡改
-5. 校验通过后点击「获取 Root」
-6. 终端显示 `uid=0(root)` 即成功
+3. 选择你的设备型号，点击「获取 Root」
+4. 或点击「本地上传 .so」选择手机里的 .so 文件，再点「使用本地 .so 执行」
+5. 终端显示 `uid=0(root)` 即成功
 
 ## 安全说明
 
-- 每次使用前页面会验证 .so 的 SHA256 与 manifest 中的哈希是否一致
-- 如果 .so 文件被篡改，校验会失败并拒绝执行
-- 添加新 .so 后务必运行 `update-manifest.sh` 更新哈希
-- **仅供自用，请勿公开分享此页面**
+- 仓库为公开仓库，仅自己有写入权限
+- 支持本地上传 .so 文件，不依赖网络下载
+- **仅供自用，请勿用于他人设备**
 
 ## 免责声明
 
