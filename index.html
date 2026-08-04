@@ -326,8 +326,6 @@
 
     // ====== 本地 .so 上传 ======
     var localSoFile = null;
-    var localSoHash = null;
-    var localSoDisplayed = false;
 
     // 隐藏的文件输入
     var fileInput = document.createElement('input');
@@ -352,7 +350,6 @@
         var buf = await file.arrayBuffer();
         var hash = await sha256(buf);
         localSoFile = file;
-        localSoHash = hash;
         document.getElementById('local-sha256').textContent = 'SHA256: ' + hash;
         document.getElementById('btn-run-local').disabled = false;
         statusBar.textContent = '本地文件已就绪: ' + file.name;
