@@ -36,6 +36,16 @@
       "name": "作业帮学习机 T20Pro+",
       "kernel": "5.2.0",
       "so": "so/zuoyebang.so"
+    },
+    {
+      "name": "小米 14 (beryl)",
+      "kernel": "含 KernelSU",
+      "so": "so/woshi_beryl.so"
+    },
+    {
+      "name": "Redmi K70 / K80 Pro (rodin)",
+      "kernel": "含 KernelSU",
+      "so": "so/woshi_rodin.so"
     }
   ]
 }
