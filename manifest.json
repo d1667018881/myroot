@@ -46,6 +46,21 @@
       "name": "Redmi K70 / K80 Pro (rodin)",
       "kernel": "含 KernelSU",
       "so": "so/woshi_rodin.so"
+    },
+    {
+      "name": "iQOO Neo11 Plus (PD2520)",
+      "kernel": "GKI 6.6, 骁龙8 Elite, Android 16",
+      "so": "so/neo11plus.so"
+    },
+    {
+      "name": "OPPO PCKM00 (OP4A57)",
+      "kernel": "4.14.180, 骁龙6150, Android 11",
+      "so": "so/oppo_pckm00.so"
+    },
+    {
+      "name": "Redmi K40 系 (SM8250)",
+      "kernel": "4.19.157, 骁龙870, Android 13",
+      "so": "so/redmi_k40_4.19.so"
     }
   ]
 }
