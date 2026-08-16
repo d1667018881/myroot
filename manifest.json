@@ -61,6 +61,12 @@
       "name": "Redmi K40 系 (SM8250)",
       "kernel": "4.19.157, 骁龙870, Android 13",
       "so": "so/redmi_k40_4.19.so"
+    },
+    {
+      "name": "小米 17 (ghostlock)",
+      "kernel": "6.12.23, 内置22内核偏移, 含KernelSU",
+      "so": "so/ghostlock",
+      "type": "bin"
     }
   ]
 }
