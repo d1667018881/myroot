@@ -63,10 +63,10 @@
       "so": "so/redmi_k40_4.19.so"
     },
     {
-      "name": "小米 17 (ghostlock)",
+      "name": "小米 17 (ghostlock.so)",
       "kernel": "6.12.23, 内置22内核偏移, 含KernelSU",
-      "so": "so/ghostlock",
-      "type": "bin"
+      "so": "so/ghostlock.so",
+      "spawn": true
     }
   ]
 }
