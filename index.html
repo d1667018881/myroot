@@ -303,7 +303,7 @@
         // 按设备类型分发：spawn = LD_PRELOAD+等待，bin = 独立执行，so = 标准 LD_PRELOAD 轮询
         var file = new File([buf], device.so.split('/').pop(), { type: 'application/octet-stream' });
         if (isSpawn) {
-          await window.uploadSoSpawnAndRun(file, 30000);
+          await window.uploadSoSpawnAndRun(file, 120000);
         } else if (isBin) {
           await window.uploadBinAndRun(file);
         } else {
