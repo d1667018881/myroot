@@ -1,0 +1,82 @@
+name: Build GhostLock .so
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "scripts/ghostlock-lmk-fix.patch"
+      - ".github/workflows/build-ghostlock.yml"
+
+concurrency:
+  group: "build-ghostlock"
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build ghostlock.so
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout myroot
+        uses: actions/checkout@v6
+
+      - name: Clone ghostlock-app
+        run: |
+          git clone --depth=1 https://github.com/YuKongA/ghostlock-app.git /tmp/ghostlock-app
+
+      - name: Apply LMK fix patch
+        run: |
+          cd /tmp/ghostlock-app
+          git apply "${{ github.workspace }}/scripts/ghostlock-lmk-fix.patch"
+          echo "=== Patch applied ==="
+          git diff --stat
+
+      - name: Download ONDK
+        run: |
+          ONDK_VERSION="r30.1"
+          curl -fL "https://github.com/topjohnwu/ondk/releases/download/${ONDK_VERSION}/ondk-${ONDK_VERSION}-linux.tar.xz" \
+            -o /tmp/ondk.tar.xz
+          mkdir -p /tmp/ondk
+          tar -C /tmp/ondk --strip-components=1 -xf /tmp/ondk.tar.xz
+          echo "ONDK_HOME=/tmp/ondk" >> "$GITHUB_ENV"
+
+      - name: Build ghostlock.so
+        run: |
+          export ANDROID_NDK_HOME="$ONDK_HOME"
+          export NDK_ROOT="$ONDK_HOME"
+          export API=35
+          CLANG="$ONDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android${API}-clang"
+
+          cd /tmp/ghostlock-app
+
+          $CLANG -shared -fPIC -O2 -flto \
+            -Wall -Wno-unused-parameter -Wno-sign-compare -Wno-unused-function \
+            -Isrc/core -Isrc/kernels \
+            -DTARGET_CONFIG_H=\"target.h\" \
+            src/core/main.c src/core/offsets_json.c \
+            src/core/util.c src/core/fops.c \
+            -o ghostlock.so -pthread
+
+          echo "=== Build complete ==="
+          ls -la ghostlock.so
+          file ghostlock.so
+
+      - name: Copy to myroot and update manifest
+        run: |
+          cp /tmp/ghostlock-app/ghostlock.so "${{ github.workspace }}/so/ghostlock.so"
+
+          # Bump version in manifest.json
+          sed -i 's|so/ghostlock\.so?v=3|so/ghostlock.so?v=4|g' "${{ github.workspace }}/manifest.json"
+          echo "=== Manifest updated ==="
+          grep ghostlock "${{ github.workspace }}/manifest.json"
+
+      - name: Commit and push
+        run: |
+          cd "${{ github.workspace }}"
+          git config user.name "MClaw Bot"
+          git config user.email "bot@mclaw.local"
+          git add so/ghostlock.so manifest.json
+          git diff --cached --stat
+          git commit -m "[skip ci] build: ghostlock.so LMK fix (MM_PARTIALS=2, prepare_ctx=5x, fork delay, early cleanup)"
+          git push
