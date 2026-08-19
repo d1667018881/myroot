@@ -236,26 +236,39 @@
     const btnRun = document.getElementById('btn-run');
     const statusBar = document.getElementById('status-bar');
     const manifestStatus = document.getElementById('manifest-status');
+    window.__deviceIndex = [];  // 扁平设备索引（optgroup 分组后仍按 index 取值）
 
     async function loadManifest() {
       try {
         const resp = await fetch('manifest.json?t=' + Date.now(), { cache: 'no-store' });
         if (!resp.ok) throw new Error('HTTP ' + resp.status);
         manifest = await resp.json();
-        if (!manifest.devices || manifest.devices.length === 0) throw new Error('设备列表为空');
-        
+        const groups = manifest.groups || [];
+        window.__deviceIndex = [];
+        groups.forEach(function(g) {
+          (g.devices || []).forEach(function(d) { window.__deviceIndex.push(d); });
+        });
+        if (window.__deviceIndex.length === 0) throw new Error('设备列表为空');
+
         sel.innerHTML = '<option value="">— 请选择设备 —</option>';
-        manifest.devices.forEach(function(d, i) {
-          var opt = document.createElement('option');
-          opt.value = i;
-          opt.textContent = d.kernel ? d.name + ' · ' + d.kernel : d.name;
-          sel.appendChild(opt);
+        groups.forEach(function(g) {
+          var og = document.createElement('optgroup');
+          og.label = g.name + '（' + (g.devices || []).length + ' 个）';
+          (g.devices || []).forEach(function(d) {
+            var opt = document.createElement('option');
+            opt.value = String(window.__deviceIndex.indexOf(d));
+            // 简短来源名 + 机型 + 内核
+            var shortSrc = (d.source || '').split('/')[0];
+            opt.textContent = '[' + shortSrc + '] ' + d.name + ' · ' + (d.kernel || '');
+            og.appendChild(opt);
+          });
+          sel.appendChild(og);
         });
         sel.disabled = false;
         btnRun.disabled = true;
-        manifestStatus.textContent = '已加载 ' + manifest.devices.length + ' 个设备';
+        manifestStatus.textContent = '已加载 ' + window.__deviceIndex.length + ' 个设备';
         manifestStatus.className = 'badge badge-ok';
-        statusBar.textContent = '请选择你的设备';
+        statusBar.textContent = '请选择你的设备（GhostLock 组优先，走 KernelSU 管理）';
       } catch (e) {
         manifestStatus.textContent = '加载失败';
         manifestStatus.className = 'badge badge-fail';
@@ -267,24 +280,25 @@
     // 设备切换
     sel.addEventListener('change', function() {
       const idx = parseInt(this.value);
-      if (isNaN(idx) || !manifest || !manifest.devices[idx]) {
+      const device = window.__deviceIndex[idx];
+      if (isNaN(idx) || !device) {
         btnRun.disabled = true;
         statusBar.textContent = '请选择设备';
         return;
       }
       btnRun.disabled = false;
-      statusBar.textContent = '已选择: ' + manifest.devices[idx].name + '，点击「获取 Root」执行';
+      statusBar.textContent = '已选择: ' + device.name + ' · 来源 ' + (device.source || '未知') + '（' + (device.sourceUrl || '') + '）';
     });
 
     // ====== 执行 Root ======
     btnRun.addEventListener('click', async function() {
       var idx = parseInt(sel.value);
-      if (isNaN(idx) || !manifest || !manifest.devices[idx]) return;
+      var device = window.__deviceIndex[idx];
+      if (isNaN(idx) || !device) return;
       if (!window.uploadSoAndRun || !window.uploadBinAndRun) {
         if (typeof customAlert === 'function') customAlert('JIT Exploit 尚未完成，请等待');
         return;
       }
-      var device = manifest.devices[idx];
       var isBin = device.type === 'bin';
       var isSpawn = !!device.spawn;
       
