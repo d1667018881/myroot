@@ -65,7 +65,7 @@
     {
       "name": "小米 17 (ghostlock.so)",
       "kernel": "6.12.23, 内置22内核偏移, 含KernelSU",
-      "so": "so/ghostlock.so?v=5",
+      "so": "so/ghostlock.so?v=6",
       "spawn": true
     }
   ]
