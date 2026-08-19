@@ -6,18 +6,14 @@
   <title>myroot</title>
   <link rel="stylesheet" href="Assets/modal.css" />
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      text-decoration: none;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; text-decoration: none; }
     body {
       overflow-x: hidden;
       min-height: 100vh;
       display: flex;
       justify-content: center;
-      align-items: center;
+      align-items: flex-start;
+      padding: 1rem 0;
       background: linear-gradient(145deg, #0a0a0f 0%, #14141f 50%, #0d0d18 100%);
       font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
     }
@@ -29,83 +25,104 @@
       width: 92%;
       max-width: 540px;
     }
-    .sep-line {
-      width: 100%;
-      height: 1px;
-      background: linear-gradient(90deg, transparent, rgba(120, 80, 255, 0.2), transparent);
-      margin: 0.3rem 0;
-    }
-    .local-area {
-      width: 100%;
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-    }
-    #local-file-name {
-      font-size: 12px;
-      color: rgba(255,255,255,0.45);
-      word-break: break-all;
-    }
-    #local-sha256 {
-      font-size: 11px;
-      color: rgba(255,255,255,0.25);
-      word-break: break-all;
-      font-family: 'SF Mono', 'Fira Code', monospace;
-    }
-    .file-input-wrap {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-    }
-    .file-input-wrap input[type="file"] {
-      display: none;
-    }
     .panel {
       width: 100%;
       background: rgba(18, 18, 30, 0.85);
       border-radius: 20px;
-      padding: 1.2rem 1.4rem;
+      padding: 1.2rem 1.3rem;
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
       border: 1px solid rgba(120, 80, 255, 0.12);
-      box-shadow: 0 4px 24px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.04);
+      box-shadow: 0 4px 24px rgba(0,0,0,0.4);
     }
     .panel-title {
-      color: rgba(255,255,255,0.85);
-      font-size: 14px;
+      color: rgba(255,255,255,0.9);
+      font-size: 15px;
       font-weight: 600;
-      margin-bottom: 0.8rem;
-      letter-spacing: 0.5px;
-    }
-    #device-selector {
-      width: 100%;
-      padding: 10px 14px;
-      border-radius: 12px;
-      border: 1px solid rgba(255,255,255,0.08);
-      background: rgba(0,0,0,0.35);
-      color: #e0e0e0;
-      font-size: 14px;
-      font-family: inherit;
-      outline: none;
-      cursor: pointer;
-      margin-bottom: 0.8rem;
-      transition: border-color 0.2s;
-    }
-    #device-selector option {
-      background: #0f0f1a;
-      color: #e0e0e0;
-    }
-    #device-selector:focus {
-      border-color: rgba(120, 80, 255, 0.4);
-    }
-    .btn-row {
+      margin-bottom: 0.9rem;
       display: flex;
-      gap: 10px;
-      width: 100%;
+      align-items: center;
+      justify-content: space-between;
     }
+    .badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 500;
+    }
+    .badge-ok { background: rgba(40, 180, 70, 0.15); color: #5cd87a; }
+    .badge-warn { background: rgba(220, 160, 40, 0.15); color: #f0c040; }
+    .badge-fail { background: rgba(200, 60, 60, 0.15); color: #ff6b6b; }
+
+    /* ===== 设备卡片列表 ===== */
+    #device-list {
+      width: 100%;
+      max-height: 360px;
+      overflow-y: auto;
+      margin-bottom: 0.8rem;
+      padding-right: 4px;
+    }
+    #device-list::-webkit-scrollbar { width: 4px; }
+    #device-list::-webkit-scrollbar-thumb { background: rgba(120,80,255,0.3); border-radius: 2px; }
+    .group-title {
+      color: rgba(255,255,255,0.55);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      margin: 14px 0 8px;
+      padding-left: 2px;
+    }
+    .group-title:first-child { margin-top: 0; }
+    .device-card {
+      padding: 11px 13px;
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 12px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: all 0.15s;
+      background: rgba(0,0,0,0.2);
+    }
+    .device-card:last-child { margin-bottom: 2px; }
+    .device-card:hover { border-color: rgba(120,80,255,0.3); }
+    .device-card.selected {
+      border-color: rgba(120,80,255,0.65);
+      background: rgba(120,80,255,0.1);
+      box-shadow: 0 0 0 1px rgba(120,80,255,0.25);
+    }
+    .device-name {
+      color: #f0f0f0;
+      font-size: 14px;
+      font-weight: 500;
+      line-height: 1.35;
+    }
+    .device-name .verified {
+      color: #5cd87a;
+      font-size: 12px;
+      margin-left: 2px;
+    }
+    .device-meta {
+      margin-top: 5px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .device-kernel {
+      color: rgba(255,255,255,0.38);
+      font-size: 11px;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      word-break: break-all;
+      line-height: 1.4;
+    }
+    .device-source {
+      color: rgba(140, 110, 255, 0.65);
+      font-size: 10px;
+    }
+
+    .btn-row { display: flex; gap: 10px; width: 100%; }
     .btn {
       flex: 1;
-      padding: 10px 14px;
+      padding: 11px 14px;
       border-radius: 12px;
       border: none;
       font-size: 14px;
@@ -120,73 +137,81 @@
       color: #fff;
       box-shadow: 0 2px 12px rgba(120, 80, 255, 0.2);
     }
-    .btn-primary:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 4px 20px rgba(120, 80, 255, 0.35);
-    }
-    .btn-primary:disabled {
-      opacity: 0.3;
-      cursor: not-allowed;
-      transform: none;
-      box-shadow: none;
-    }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 20px rgba(120, 80, 255, 0.35); }
+    .btn-primary:disabled { opacity: 0.3; cursor: not-allowed; transform: none; box-shadow: none; }
     .btn-secondary {
       background: rgba(255,255,255,0.06);
       color: rgba(255,255,255,0.7);
       border: 1px solid rgba(255,255,255,0.08);
     }
-    .btn-secondary:hover {
-      background: rgba(255,255,255,0.1);
-      color: #fff;
-    }
-    .badge {
-      display: inline-block;
-      padding: 2px 10px;
-      border-radius: 8px;
-      font-size: 11px;
-      font-weight: 500;
-      margin-left: 6px;
-    }
-    .badge-ok { background: rgba(40, 180, 70, 0.15); color: #5cd87a; }
-    .badge-warn { background: rgba(220, 160, 40, 0.15); color: #f0c040; }
-    .badge-fail { background: rgba(200, 60, 60, 0.15); color: #ff6b6b; }
+    .btn-secondary:hover { background: rgba(255,255,255,0.1); color: #fff; }
+
     #status-bar {
       font-size: 12px;
-      color: rgba(255,255,255,0.35);
-      text-align: center;
-      margin-top: 8px;
+      color: rgba(255,255,255,0.45);
+      margin-top: 10px;
+      line-height: 1.5;
+      word-break: break-all;
     }
+    .sep-line {
+      width: 100%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(120, 80, 255, 0.2), transparent);
+      margin: 0.8rem 0;
+    }
+    .local-area { width: 100%; display: flex; flex-direction: column; gap: 0.5rem; }
+    .file-input-wrap { display: flex; gap: 10px; align-items: center; }
+    .file-input-wrap input[type="file"] { display: none; }
+    #local-file-name { font-size: 12px; color: rgba(255,255,255,0.45); word-break: break-all; }
+    #local-sha256 { font-size: 11px; color: rgba(255,255,255,0.25); word-break: break-all; font-family: 'SF Mono', 'Fira Code', monospace; }
+
+    /* KernelSU 链接 */
+    .ksu-link {
+      margin-top: 0.9rem;
+      text-align: center;
+    }
+    .ksu-link a {
+      display: inline-block;
+      color: rgba(120, 150, 255, 0.8);
+      font-size: 12px;
+      padding: 6px 14px;
+      border: 1px solid rgba(120, 150, 255, 0.25);
+      border-radius: 20px;
+      transition: all 0.2s;
+    }
+    .ksu-link a:hover { background: rgba(120, 150, 255, 0.1); color: #a0c0ff; }
+
+    /* 终端 */
     #out {
-      white-space:pre-wrap;
-      word-break:break-all;
-      font-family:'SF Mono','Fira Code','Cascadia Code',monospace;
-      padding:20px 20px 80px;
-      color:#d0d0e0;
-      font-weight:400;
-      font-size:13px;
-      line-height:1.6;
-      min-height:200px;
-      max-height:400px;
-      overflow-y:auto;
-      background:rgba(0,0,0,0.25);
+      white-space: pre-wrap;
+      word-break: break-all;
+      font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+      padding: 20px 20px 80px;
+      color: #d0d0e0;
+      font-weight: 400;
+      font-size: 13px;
+      line-height: 1.6;
+      min-height: 200px;
+      max-height: 400px;
+      overflow-y: auto;
+      background: rgba(0,0,0,0.25);
     }
     #cmd {
-      width:100%;
-      box-sizing:border-box;
-      padding:12px 16px;
-      border:none;
-      border-top:1px solid rgba(120,80,255,0.1);
-      background:rgba(0,0,0,0.4);
-      color:#e0e0e0;
-      font-size:13px;
-      font-family:'SF Mono','Fira Code','Cascadia Code',monospace;
-      outline:none;
+      width: 100%;
+      box-sizing: border-box;
+      padding: 12px 16px;
+      border: none;
+      border-top: 1px solid rgba(120,80,255,0.1);
+      background: rgba(0,0,0,0.4);
+      color: #e0e0e0;
+      font-size: 13px;
+      font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+      outline: none;
     }
-    #cmd::placeholder {
-      color: rgba(255,255,255,0.2);
-    }
+    #cmd::placeholder { color: rgba(255,255,255,0.2); }
+
     @media (max-width: 480px) {
-      body { padding: 0.5rem; }
+      body { padding: 0.5rem 0; }
       .panel { padding: 1rem; border-radius: 16px; }
     }
   </style>
@@ -196,16 +221,14 @@
     <!-- 设备选择面板 -->
     <div class="panel">
       <div class="panel-title">
-        设备选择
+        <span>设备选择</span>
         <span id="manifest-status" class="badge badge-warn">加载中</span>
       </div>
-      <select id="device-selector" disabled>
-        <option value="">— 正在加载设备列表 —</option>
-      </select>
+      <div id="device-list"></div>
       <div class="btn-row">
         <button id="btn-run" class="btn btn-primary" disabled>获取 Root</button>
       </div>
-      <div id="status-bar">初始化中...</div>
+      <div id="status-bar">请选择你的设备</div>
 
       <div class="sep-line"></div>
 
@@ -216,6 +239,10 @@
         </div>
         <div id="local-sha256"></div>
         <button id="btn-run-local" class="btn btn-primary" disabled>使用本地 .so 执行</button>
+      </div>
+
+      <div class="ksu-link">
+        <a href="https://github.com/tiann/KernelSU/releases" target="_blank" rel="noopener">📦 KernelSU 管理器 · 官方下载</a>
       </div>
     </div>
 
@@ -230,13 +257,31 @@
   <script src="ansi.js"></script>
   <script src="exploit.js"></script>
   <script>
-    // ====== manifest 加载 ======
+    // ====== manifest 加载 + 设备卡片渲染 ======
     let manifest = null;
-    const sel = document.getElementById('device-selector');
+    const list = document.getElementById('device-list');
     const btnRun = document.getElementById('btn-run');
     const statusBar = document.getElementById('status-bar');
     const manifestStatus = document.getElementById('manifest-status');
-    window.__deviceIndex = [];  // 扁平设备索引（optgroup 分组后仍按 index 取值）
+    window.__deviceIndex = [];
+    let selectedIdx = -1;
+
+    function selectDevice(idx) {
+      selectedIdx = idx;
+      // 高亮切换
+      var cards = list.querySelectorAll('.device-card');
+      cards.forEach(function(c, i) {
+        if (i === idx) c.classList.add('selected');
+        else c.classList.remove('selected');
+      });
+      var d = window.__deviceIndex[idx];
+      if (!d) return;
+      btnRun.disabled = false;
+      statusBar.textContent = '已选择: ' + d.name + ' · 来源 ' + (d.source || '未知') + '（' + (d.sourceUrl || '') + '）';
+      // 滚动到选中卡片
+      var card = cards[idx];
+      if (card && card.scrollIntoView) card.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
 
     async function loadManifest() {
       try {
@@ -250,71 +295,60 @@
         });
         if (window.__deviceIndex.length === 0) throw new Error('设备列表为空');
 
-        sel.innerHTML = '<option value="">— 请选择设备 —</option>';
+        list.innerHTML = '';
         groups.forEach(function(g) {
-          var og = document.createElement('optgroup');
-          og.label = g.name + '（' + (g.devices || []).length + ' 个）';
+          var title = document.createElement('div');
+          title.className = 'group-title';
+          title.textContent = g.name + ' · ' + (g.devices || []).length + ' 个';
+          list.appendChild(title);
+
           (g.devices || []).forEach(function(d) {
-            var opt = document.createElement('option');
-            opt.value = String(window.__deviceIndex.indexOf(d));
-            // 简短来源名 + 机型 + 内核
-            var shortSrc = (d.source || '').split('/')[0];
-            opt.textContent = '[' + shortSrc + '] ' + d.name + ' · ' + (d.kernel || '');
-            og.appendChild(opt);
+            var idx = window.__deviceIndex.indexOf(d);
+            var card = document.createElement('div');
+            card.className = 'device-card';
+            var nameHtml = '<div class="device-name">' + d.name.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</div>';
+            var metaHtml = '<div class="device-meta">'
+              + '<div class="device-kernel">' + (d.kernel || '内核未标注').replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</div>'
+              + '<div class="device-source">来源: ' + (d.source || '未知').replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</div>'
+              + '</div>';
+            card.innerHTML = nameHtml + metaHtml;
+            card.onclick = function() { selectDevice(idx); };
+            list.appendChild(card);
           });
-          sel.appendChild(og);
         });
-        sel.disabled = false;
-        btnRun.disabled = true;
+
         manifestStatus.textContent = '已加载 ' + window.__deviceIndex.length + ' 个设备';
         manifestStatus.className = 'badge badge-ok';
-        statusBar.textContent = '请选择你的设备（GhostLock 组优先，走 KernelSU 管理）';
       } catch (e) {
         manifestStatus.textContent = '加载失败';
         manifestStatus.className = 'badge badge-fail';
         statusBar.textContent = 'manifest.json 加载失败: ' + e.message;
-        sel.innerHTML = '<option value="">— 加载失败 —</option>';
       }
     }
 
-    // 设备切换
-    sel.addEventListener('change', function() {
-      const idx = parseInt(this.value);
-      const device = window.__deviceIndex[idx];
-      if (isNaN(idx) || !device) {
-        btnRun.disabled = true;
-        statusBar.textContent = '请选择设备';
-        return;
-      }
-      btnRun.disabled = false;
-      statusBar.textContent = '已选择: ' + device.name + ' · 来源 ' + (device.source || '未知') + '（' + (device.sourceUrl || '') + '）';
-    });
-
     // ====== 执行 Root ======
     btnRun.addEventListener('click', async function() {
-      var idx = parseInt(sel.value);
-      var device = window.__deviceIndex[idx];
-      if (isNaN(idx) || !device) return;
+      var device = window.__deviceIndex[selectedIdx];
+      if (!device) return;
       if (!window.uploadSoAndRun || !window.uploadBinAndRun) {
         if (typeof customAlert === 'function') customAlert('JIT Exploit 尚未完成，请等待');
         return;
       }
       var isBin = device.type === 'bin';
       var isSpawn = !!device.spawn;
-      
+
       btnRun.disabled = true;
       btnRun.textContent = '下载中...';
       statusBar.textContent = '正在获取 ' + device.so + ' ...';
-      
+
       try {
         var resp = await fetch(device.so, { cache: 'no-store' });
         if (!resp.ok) throw new Error('下载失败: HTTP ' + resp.status);
         var buf = await resp.arrayBuffer();
-        
+
         btnRun.textContent = '执行中...';
         statusBar.textContent = isSpawn ? '正在上传并通过 LD_PRELOAD 提权...' : (isBin ? '正在上传并运行 ghostlock...' : '正在上传 .so 并提权...');
-        
-        // 按设备类型分发：spawn = LD_PRELOAD+等待，bin = 独立执行，so = 标准 LD_PRELOAD 轮询
+
         var file = new File([buf], device.so.split('/').pop(), { type: 'application/octet-stream' });
         if (isSpawn) {
           await window.uploadSoSpawnAndRun(file, 120000);
@@ -323,7 +357,7 @@
         } else {
           await window.uploadSoAndRun(file);
         }
-        
+
         btnRun.textContent = '执行完成';
         statusBar.textContent = device.name + ' 提权流程结束，查看终端输出';
       } catch (e) {
@@ -334,39 +368,31 @@
       }
     });
 
-    // ====== SHA256 计算（仅用于本地文件信息展示）======
+    // ====== SHA256 计算 ======
     async function sha256(buffer) {
       var hash = await crypto.subtle.digest('SHA-256', buffer);
       var hex = '';
       var bytes = new Uint8Array(hash);
-      for (var i = 0; i < bytes.length; i++) {
-        hex += bytes[i].toString(16).padStart(2, '0');
-      }
+      for (var i = 0; i < bytes.length; i++) hex += bytes[i].toString(16).padStart(2, '0');
       return hex;
     }
 
     // ====== 本地 .so 上传 ======
     var localSoFile = null;
-
-    // 隐藏的文件输入
     var fileInput = document.createElement('input');
     fileInput.type = 'file';
     fileInput.accept = '.so,.so.*';
     fileInput.style.display = 'none';
     document.body.appendChild(fileInput);
 
-    document.getElementById('btn-local').addEventListener('click', function() {
-      fileInput.click();
-    });
+    document.getElementById('btn-local').addEventListener('click', function() { fileInput.click(); });
 
     fileInput.addEventListener('change', async function(e) {
       var file = e.target.files[0];
       if (!file) return;
-
       document.getElementById('local-file-name').textContent = '📄 ' + file.name + ' (' + (file.size / 1024).toFixed(1) + ' KB)';
       document.getElementById('local-sha256').textContent = 'SHA256: 计算中...';
       document.getElementById('btn-run-local').disabled = true;
-
       try {
         var buf = await file.arrayBuffer();
         var hash = await sha256(buf);
@@ -376,13 +402,10 @@
         statusBar.textContent = '本地文件已就绪: ' + file.name;
       } catch (err) {
         document.getElementById('local-sha256').textContent = 'SHA256: ❌ 计算失败';
-        if (typeof customAlert === 'function') {
-          customAlert('文件读取失败: ' + err.message);
-        }
+        if (typeof customAlert === 'function') customAlert('文件读取失败: ' + err.message);
       }
     });
 
-    // ====== 使用本地 .so 执行 ======
     document.getElementById('btn-run-local').addEventListener('click', async function() {
       if (!localSoFile) {
         if (typeof customAlert === 'function') customAlert('请先选择本地的 .so 文件');
@@ -392,15 +415,11 @@
         if (typeof customAlert === 'function') customAlert('JIT Exploit 尚未完成，请等待');
         return;
       }
-
       var btn = document.getElementById('btn-run-local');
       btn.disabled = true;
       btn.textContent = '执行中...';
       statusBar.textContent = '正在使用本地 .so 提权...';
-
-      // exploit.js 的 uploadSoAndRun 支持 File 对象，直接传
       await window.uploadSoAndRun(localSoFile);
-
       btn.textContent = '✅ 执行完成';
       statusBar.textContent = '本地 .so 提权流程结束，查看终端输出';
     });
