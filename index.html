@@ -55,16 +55,61 @@
     .badge-warn { background: rgba(220, 160, 40, 0.15); color: #f0c040; }
     .badge-fail { background: rgba(200, 60, 60, 0.15); color: #ff6b6b; }
 
-    /* ===== 设备卡片列表 ===== */
-    #device-list {
+    /* ===== 设备选择按钮 ===== */
+    #btn-pick-device {
       width: 100%;
-      max-height: 360px;
-      overflow-y: auto;
-      margin-bottom: 0.8rem;
-      padding-right: 4px;
+      margin-bottom: 10px;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
-    #device-list::-webkit-scrollbar { width: 4px; }
-    #device-list::-webkit-scrollbar-thumb { background: rgba(120,80,255,0.3); border-radius: 2px; }
+    #btn-pick-device .pick-icon { flex: none; font-size: 15px; }
+    #picked-device-label {
+      flex: 1;
+      font-size: 13px;
+      color: rgba(255,255,255,0.75);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    #picked-device-label.picked { color: #fff; }
+
+    /* ===== 设备选择弹窗 ===== */
+    .picker-card {
+      width: min(94vw, 430px);
+      max-height: 76vh;
+      display: flex;
+      flex-direction: column;
+      border-radius: 20px;
+      border: 1px solid rgba(120, 80, 255, 0.28);
+      background: rgba(16, 16, 28, 0.96);
+      backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+      box-shadow: 0 16px 48px rgba(0,0,0,0.6);
+      animation: modalSlideIn 0.25s ease;
+      overflow: hidden;
+    }
+    .picker-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 16px;
+      border-bottom: 1px solid rgba(120, 80, 255, 0.12);
+      flex: none;
+    }
+    .picker-title { color: #fff; font-size: 14px; font-weight: 600; }
+    .picker-close {
+      background: rgba(255,255,255,0.06); border: none; color: rgba(255,255,255,0.6);
+      width: 28px; height: 28px; border-radius: 8px; cursor: pointer; font-size: 13px;
+      transition: all 0.15s;
+    }
+    .picker-close:hover { background: rgba(255,255,255,0.12); color: #fff; }
+    .picker-body {
+      overflow-y: auto;
+      padding: 6px 14px 14px;
+      flex: 1;
+    }
+    .picker-body::-webkit-scrollbar { width: 4px; }
+    .picker-body::-webkit-scrollbar-thumb { background: rgba(120,80,255,0.3); border-radius: 2px; }
+
     .group-title {
       color: rgba(255,255,255,0.55);
       font-size: 12px;
@@ -73,7 +118,7 @@
       margin: 14px 0 8px;
       padding-left: 2px;
     }
-    .group-title:first-child { margin-top: 0; }
+    .group-title:first-child { margin-top: 4px; }
     .device-card {
       padding: 11px 13px;
       border: 1px solid rgba(255,255,255,0.07);
@@ -96,17 +141,7 @@
       font-weight: 500;
       line-height: 1.35;
     }
-    .device-name .verified {
-      color: #5cd87a;
-      font-size: 12px;
-      margin-left: 2px;
-    }
-    .device-meta {
-      margin-top: 5px;
-      display: flex;
-      flex-direction: column;
-      gap: 3px;
-    }
+    .device-meta { margin-top: 5px; display: flex; flex-direction: column; gap: 3px; }
     .device-kernel {
       color: rgba(255,255,255,0.38);
       font-size: 11px;
@@ -114,10 +149,7 @@
       word-break: break-all;
       line-height: 1.4;
     }
-    .device-source {
-      color: rgba(140, 110, 255, 0.65);
-      font-size: 10px;
-    }
+    .device-source { color: rgba(140, 110, 255, 0.65); font-size: 10px; }
 
     .btn-row { display: flex; gap: 10px; width: 100%; }
     .btn {
@@ -165,11 +197,7 @@
     #local-file-name { font-size: 12px; color: rgba(255,255,255,0.45); word-break: break-all; }
     #local-sha256 { font-size: 11px; color: rgba(255,255,255,0.25); word-break: break-all; font-family: 'SF Mono', 'Fira Code', monospace; }
 
-    /* KernelSU 链接 */
-    .ksu-link {
-      margin-top: 0.9rem;
-      text-align: center;
-    }
+    .ksu-link { margin-top: 0.9rem; text-align: center; }
     .ksu-link a {
       display: inline-block;
       color: rgba(120, 150, 255, 0.8);
@@ -224,7 +252,10 @@
         <span>设备选择</span>
         <span id="manifest-status" class="badge badge-warn">加载中</span>
       </div>
-      <div id="device-list"></div>
+      <button id="btn-pick-device" class="btn btn-secondary" disabled>
+        <span class="pick-icon">📱</span>
+        <span id="picked-device-label">— 点击选择设备 —</span>
+      </button>
       <div class="btn-row">
         <button id="btn-run" class="btn btn-primary" disabled>获取 Root</button>
       </div>
@@ -257,30 +288,83 @@
   <script src="ansi.js"></script>
   <script src="exploit.js"></script>
   <script>
-    // ====== manifest 加载 + 设备卡片渲染 ======
+    // ====== manifest 加载 ======
     let manifest = null;
-    const list = document.getElementById('device-list');
     const btnRun = document.getElementById('btn-run');
     const statusBar = document.getElementById('status-bar');
     const manifestStatus = document.getElementById('manifest-status');
+    const pickedLabel = document.getElementById('picked-device-label');
     window.__deviceIndex = [];
     let selectedIdx = -1;
 
+    function escapeHtml(s) {
+      return String(s).replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
     function selectDevice(idx) {
       selectedIdx = idx;
-      // 高亮切换
-      var cards = list.querySelectorAll('.device-card');
-      cards.forEach(function(c, i) {
-        if (i === idx) c.classList.add('selected');
-        else c.classList.remove('selected');
-      });
       var d = window.__deviceIndex[idx];
       if (!d) return;
+      pickedLabel.textContent = d.name + (d.verified ? ' ✅实测' : '');
+      pickedLabel.classList.add('picked');
       btnRun.disabled = false;
       statusBar.textContent = '已选择: ' + d.name + ' · 来源 ' + (d.source || '未知') + '（' + (d.sourceUrl || '') + '）';
-      // 滚动到选中卡片
-      var card = cards[idx];
-      if (card && card.scrollIntoView) card.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
+
+    // ====== 设备选择弹窗 ======
+    function openDevicePicker() {
+      if (!window.__deviceIndex.length) return;
+
+      var overlay = document.createElement('div');
+      overlay.className = 'modal-overlay';
+      var card = document.createElement('div');
+      card.className = 'picker-card';
+
+      var header = document.createElement('div');
+      header.className = 'picker-header';
+      var title = document.createElement('span');
+      title.className = 'picker-title';
+      title.textContent = '选择设备（' + window.__deviceIndex.length + ' 个）';
+      var closeBtn = document.createElement('button');
+      closeBtn.className = 'picker-close';
+      closeBtn.textContent = '✕';
+      header.appendChild(title);
+      header.appendChild(closeBtn);
+
+      var body = document.createElement('div');
+      body.className = 'picker-body';
+      manifest.groups.forEach(function(g) {
+        var gt = document.createElement('div');
+        gt.className = 'group-title';
+        gt.textContent = g.name + ' · ' + (g.devices || []).length + ' 个';
+        body.appendChild(gt);
+        (g.devices || []).forEach(function(d) {
+          var idx = window.__deviceIndex.indexOf(d);
+          var dc = document.createElement('div');
+          dc.className = 'device-card' + (idx === selectedIdx ? ' selected' : '');
+          dc.innerHTML = '<div class="device-name">' + escapeHtml(d.name) + '</div>'
+            + '<div class="device-meta">'
+            + '<div class="device-kernel">' + escapeHtml(d.kernel || '内核未标注') + '</div>'
+            + '<div class="device-source">来源: ' + escapeHtml(d.source || '未知') + '</div>'
+            + '</div>';
+          dc.onclick = function() {
+            selectDevice(idx);
+            closePicker(overlay);
+          };
+          body.appendChild(dc);
+        });
+      });
+
+      function closePicker(ov) {
+        ov.style.animation = 'modalFadeOut 0.2s ease';
+        setTimeout(function() { ov.remove(); }, 200);
+      }
+      card.appendChild(header);
+      card.appendChild(body);
+      overlay.appendChild(card);
+      document.body.appendChild(overlay);
+      closeBtn.onclick = function() { closePicker(overlay); };
+      overlay.onclick = function(e) { if (e.target === overlay) closePicker(overlay); };
     }
 
     async function loadManifest() {
@@ -294,29 +378,7 @@
           (g.devices || []).forEach(function(d) { window.__deviceIndex.push(d); });
         });
         if (window.__deviceIndex.length === 0) throw new Error('设备列表为空');
-
-        list.innerHTML = '';
-        groups.forEach(function(g) {
-          var title = document.createElement('div');
-          title.className = 'group-title';
-          title.textContent = g.name + ' · ' + (g.devices || []).length + ' 个';
-          list.appendChild(title);
-
-          (g.devices || []).forEach(function(d) {
-            var idx = window.__deviceIndex.indexOf(d);
-            var card = document.createElement('div');
-            card.className = 'device-card';
-            var nameHtml = '<div class="device-name">' + d.name.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</div>';
-            var metaHtml = '<div class="device-meta">'
-              + '<div class="device-kernel">' + (d.kernel || '内核未标注').replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</div>'
-              + '<div class="device-source">来源: ' + (d.source || '未知').replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</div>'
-              + '</div>';
-            card.innerHTML = nameHtml + metaHtml;
-            card.onclick = function() { selectDevice(idx); };
-            list.appendChild(card);
-          });
-        });
-
+        document.getElementById('btn-pick-device').disabled = false;
         manifestStatus.textContent = '已加载 ' + window.__deviceIndex.length + ' 个设备';
         manifestStatus.className = 'badge badge-ok';
       } catch (e) {
@@ -325,6 +387,8 @@
         statusBar.textContent = 'manifest.json 加载失败: ' + e.message;
       }
     }
+
+    document.getElementById('btn-pick-device').addEventListener('click', openDevicePicker);
 
     // ====== 执行 Root ======
     btnRun.addEventListener('click', async function() {
