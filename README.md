@@ -117,6 +117,42 @@ ghostlock.so **内置 22 个内核偏移表**，运行时按 `uname -r` 自动�
 
 完整 22 个内核名见 `manifest.json`（`kernel` 字段）或 `src/kernels/` 目录。
 
+## 各 .so 来源对照
+
+| 分组 | .so | 原仓库 | 方案 |
+|------|-----|--------|------|
+| GhostLock 组 | `so/ghostlock.so`（22 内核通用） | [YuKongA/ghostlock-app](https://github.com/YuKongA/ghostlock-app) | CVE-2026-43499 futex → KernelSU |
+| GhostLock 组 | `so/woshi_beryl.so`（小米14） | [woshimaniubi8/CVE-2026-43499-root-KernelSU](https://github.com/woshimaniubi8/CVE-2026-43499-root-KernelSU) | 同漏洞预编译，内置 KernelSU |
+| GhostLock 组 | `so/woshi_rodin.so`（K70） | 同上 | 同上 |
+| IonStack 组 | `so/iqoo_neo11.so` 等 10 个 | [hexo141/Rootme](https://github.com/hexo141/Rootme)（搬运 [NebuSec/CyberMeowfia](https://github.com/NebuSec/CyberMeowfia)） | IonStack physrw → su daemon |
+
+> 本仓库不重复造轮子：GhostLock 组用 YuKongA 源码编译（仅加 constructor 入口 + 上述 5 个修复），
+> IonStack 组直接搬运 hexo141 的预编译 .so（反编译验证过无恶意）。
+
+## 偏移提取教程（直接用原仓库方法）
+
+新机型内核不在内置 22 表里时，用 YuKongA 原仓库的 `tools/extract_rs` 提取偏移：
+
+```bash
+# 方式 1：本地 boot.img
+cargo build --release --manifest-path tools/extract_rs/Cargo.toml
+tools/extract_rs/target/release/ghostlock-extract boot.img \
+  --xbl-config xbl_config.img --format json --out offsets.json
+
+# 方式 2：OTA 卡刷包（本地 zip 或 URL）
+ghostlock-extract OTA.zip --format json --out offsets.json
+ghostlock-extract https://host/full-ota.zip --format json --out offsets.json
+
+# 方式 3：生成 C 头文件（注册进 src/kernels/<uname>/offsets.h）
+ghostlock-extract boot.img --xbl-config xbl_config.img --register
+```
+
+详细说明见原仓库 README（kallsyms 恢复、MTK 无 xbl_config 的处理、`--phys` 覆盖物理加载地址等）：
+https://github.com/YuKongA/ghostlock-app#offset-extraction
+
+**网页端接入**：把 `offsets.json` 放到网页根目录（或导入），ghostlock 运行时会在
+`$GHOSTLOCK_HOME/offsets.json` 查找外部偏移（内置表优先，外部表补缺）。
+
 ## 相关仓库
 
 - 网页本项目：github.com/d1667018881/myroot
