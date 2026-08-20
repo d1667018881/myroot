@@ -120,9 +120,9 @@ ghostlock.so **内置 22 个内核偏移表**，运行时按 `uname -r` 自动�
 **内核不在 22 表里** → 用 YuKongA 原仓库的 `extract_rs` 工具（见下方"偏移提取教程"）
 生成 offsets.json，放入网页根目录或导入。
 
-## 支持机型清单（共 34 个设备）
+## 支持机型清单（共 37 个设备）
 
-### GhostLock 方案（24 个 · CVE-2026-43499 futex → KernelSU）
+### GhostLock 方案（27 个 · CVE-2026-43499 futex → KernelSU）
 
 ### 小米集团
 
@@ -143,6 +143,9 @@ ghostlock.so **内置 22 个内核偏移表**，运行时按 `uname -r` 自动�
 - REDMI K80 Pro / Turbo 5 Max / POCO X8 Pro Max / Pad 7 Ultra — `6.6.118-android15-8-gc44b714366cc-abogki519650608-4k`
 - REDMI K90 Ultra / POCO F7 — `6.6.118-android15-8-ge56cf6b09cca-ab15511674-4k`
 - Redmi K70 / K80 Pro (rodin) — `6.6 系列（预编译，机型专用）`
+**POCO**
+
+- POCO X8 Pro Max — `6.6.89-android15-8-g0889fe95bb10-ab14402178-4k`
 ### OPPO 集团
 
 **OPPO**
@@ -164,6 +167,8 @@ ghostlock.so **内置 22 个内核偏移表**，运行时按 `uname -r` 自动�
 **红魔**
 
 - Red Magic 11 Pro / Tablet 5 Pro — `6.12.23-android16-5-gf1bdb13583da-ab13761046-4k`
+- Red Magic 10 Pro / 11 Air / Tablet 3 Pro — `6.6.92-android15-8-g3637f4904cf5-ab13944661-4k`
+- Red Magic Tablet 3 Pro — `6.6.30-android15-8-g54dcbfbef792-ab12368803-4k`
 
 ### IonStack 方案（10 个 · physrw → su daemon）
 
