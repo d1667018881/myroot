@@ -1,35 +1,35 @@
 .modal-overlay {
   position: fixed; inset: 0; z-index: 99999;
   display: flex; justify-content: center; align-items: center;
-  background: rgba(4, 4, 12, 0.68);
+  background: var(--modal-overlay-bg, rgba(20,20,40,0.4));
   backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
   animation: modalFadeIn 0.25s ease;
 }
 .modal-card {
   width: 360px; max-width: 90vw; padding: 30px 26px 22px;
   border-radius: 24px;
-  border: 1px solid rgba(120, 80, 255, 0.28);
-  background: rgba(18, 18, 30, 0.95);
+  border: 1px solid var(--modal-card-border, rgba(120,80,255,0.22));
+  background: var(--modal-card-bg, rgba(255,255,255,0.96));
   backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-  box-shadow: 0 16px 48px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.06);
+  box-shadow: var(--modal-card-shadow, 0 16px 48px rgba(60,40,120,0.25));
   animation: modalSlideIn 0.3s ease;
 }
 .modal-msg {
   font-size: 15px; font-family: 'Noto Sans CJK SC','微软雅黑','PingFang SC',sans-serif;
-  color: #e8e8f0; line-height: 1.8; white-space: pre-wrap; word-break: break-word;
+  color: var(--modal-text, #202038); line-height: 1.8; white-space: pre-wrap; word-break: break-word;
   margin-bottom: 26px;
 }
 .modal-btns { display: flex; justify-content: flex-end; gap: 12px; }
 .modal-btn {
   position: relative; z-index: 1;
   padding: 10px 26px; border-radius: 14px;
-  border: 1px solid rgba(255,255,255,0.12);
+  border: 1px solid var(--modal-btn-border, rgba(30,30,60,0.14));
   font-size: 14px; font-family: 'Noto Sans CJK SC','微软雅黑','PingFang SC',sans-serif; cursor: pointer;
-  background: rgba(255,255,255,0.08); color: #e8e8f0;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  background: var(--modal-btn-bg, rgba(30,30,60,0.06)); color: var(--modal-btn-text, #202038);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
   transition: all 0.2s;
 }
-.modal-btn:hover { background: rgba(255,255,255,0.14); transform: translateY(-1px); }
+.modal-btn:hover { background: rgba(120, 80, 255, 0.1); transform: translateY(-1px); }
 .modal-btn:active { transform: scale(0.97); }
 .modal-btn-primary {
   background: linear-gradient(135deg, rgba(120, 80, 255, 0.85), rgba(80, 60, 200, 0.85));
