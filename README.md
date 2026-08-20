@@ -120,7 +120,9 @@ ghostlock.so **内置 22 个内核偏移表**，运行时按 `uname -r` 自动�
 **内核不在 22 表里** → 用 YuKongA 原仓库的 `extract_rs` 工具（见下方"偏移提取教程"）
 生成 offsets.json，放入网页根目录或导入。
 
-## 支持机型清单（GhostLock 方案，22 内核）
+## 支持机型清单（共 34 个设备）
+
+### GhostLock 方案（24 个 · CVE-2026-43499 futex → KernelSU）
 
 ### 小米集团
 
@@ -162,6 +164,39 @@ ghostlock.so **内置 22 个内核偏移表**，运行时按 `uname -r` 自动�
 **红魔**
 
 - Red Magic 11 Pro / Tablet 5 Pro — `6.12.23-android16-5-gf1bdb13583da-ab13761046-4k`
+
+### IonStack 方案（10 个 · physrw → su daemon）
+
+### 小米集团
+
+**红米**
+
+- Redmi K80 Ultra (OS2) — `6.6（含 KernelSU，OS2 版本）`
+- Redmi K80 Ultra (OS3) — `6.6（含 KernelSU，OS3 版本）`
+- Redmi K40 系 (SM8250) — `4.19.157，骁龙870，Android 13`
+### OPPO 集团
+
+**OPPO**
+
+- OPPO Find X8 — `ColorOS 16（6.6，原仓库未标注完整 uname）`
+- OPPO PCKM00 (OP4A57) — `4.14.180，骁龙6150，Android 11`
+**realme**
+
+- Realme RMX5200 — `未标注（原仓库未提供内核版本）`
+### vivo 集团
+
+**iQOO**
+
+- iQOO Neo11 Plus (PD2520) — `GKI 6.6，骁龙8 Elite，Android 16`
+- iQOO Neo11 — `未标注（原仓库未提供内核版本）`
+### 其他
+
+**作业帮**
+
+- 作业帮学习机 T20Pro+ — `5.2.0`
+**通用**
+
+- 通用核心 (arm) — `纯 exploit，无 su`
 
 完整内核名见 `manifest.json`（`kernel` 字段）。
 
