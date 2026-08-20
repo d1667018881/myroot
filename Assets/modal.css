@@ -20,6 +20,14 @@
   margin-bottom: 26px;
 }
 .modal-btns { display: flex; justify-content: flex-end; gap: 12px; }
+.modal-link {
+  color: var(--modal-link-color, #4a6fe0);
+  font-size: 13px;
+  word-break: break-all;
+  text-decoration: underline;
+  line-height: 1.5;
+}
+.modal-link:hover { opacity: 0.8; }
 .modal-btn {
   position: relative; z-index: 1;
   padding: 10px 26px; border-radius: 14px;
