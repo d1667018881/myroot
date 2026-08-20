@@ -1,22 +1,55 @@
 # myroot — 自用 Android 临时 Root 网页
 
-基于 Firefox for Android 的 JIT 漏洞 + GhostLock（CVE-2026-43499）内核提权。
-免安装、纯网页、重启即恢复（临时 root，非永久）。
+基于 Firefox for Android 的 JIT 漏洞（CVE-2026-10702）+ GhostLock（CVE-2026-43499）内核提权。
+免安装、纯网页、**重启即恢复**（临时 root，不修改系统分区、不留残留）。
 
-> 线上：https://d1667018881.github.io/myroot/
+> 线上地址：https://d1667018881.github.io/myroot/
+
+## 方案概览
+
+网页内置两组方案，在"选择设备"弹窗里分组显示：
+
+| 分组 | 漏洞 | 提权方式 | root 管理 | 适用机型 |
+|------|------|---------|----------|---------|
+| **GhostLock 方案** | CVE-2026-43499 futex PI UAF | W1/W2/W3 三步提权 | KernelSU（App 授权） | 22 个新内核 + 2 个预编译 |
+| **IonStack 方案** | NebuSec IonStack | physrw 物理读写 | su daemon（裸 root） | 10 个（hexo141 搬运） |
+
+两组都共用同一入口：Firefox JIT 漏洞拿 shell → 上传 .so 提权，区别只在 .so 的实现。
+
+## 使用前提
+
+1. **Firefox for Android ≤ 151.0**（漏洞在更高版本已修复，151.0.0 是最后一版可用）
+2. 设备为 **arm64** 架构
+3. **先安装 KernelSU 管理器 App**（GhostLock 方案提权时需从 App 提取 ksud 组件）
+
+> 注意区分：KernelSU 管理器 App（普通 App，提权前先装）≠ KernelSU 内核模块（root 能力，提权后才加载）。
+> "装 App" 只是准备好工具，真正拿到 root 靠网页提权，提权后 App 自动激活。
+
+## 使用步骤
+
+1. 安装 Firefox ≤151.0（关掉自动更新）+ KernelSU App
+2. 无痕窗口打开网页 → 点「选择设备」→ 选你的机型
+3. 点「获取 Root」→ 等终端日志输出
+4. 成功后 KernelSU App 从"未安装"变"已越狱"
+5. 重启手机即恢复未 root 状态（临时 root，需用时重跑）
+
+**测试要点**（概率性 exploit 的环境要求）：
+- Firefox 全程前台（后台 cgroup 会被 LMK 杀进程）
+- 重启后立即测（系统最干净，成功率最高）
+- 每次测试间隔 5 分钟以上，别连续跑（会触发 watchdog 重启）
 
 ## 工作原理
 
 ```
 ① Firefox JIT 漏洞 (CVE-2026-10702)
-   仅 Firefox for Android ≤ 151.0 受影响（151.0.0 是最后一版可用）
+   仅 Firefox for Android ≤ 151.0 受影响
    → 泄漏 typed array 元数据 → 任意读写 → mprotect shellcode
    → 在 untrusted_app 沙箱内执行 shell 命令（uid 10478）
 
 ② 上传 ghostlock.so 到 Firefox 私有目录
    /data/data/org.mozilla.firefox/files/res
 
-③ LD_PRELOAD 触发（关键：SELinux 禁止 untrusted_app execve app data 文件，
+③ LD_PRELOAD 触发（SELinux 禁止 untrusted_app execve app data 文件，
    但允许 dlopen / LD_PRELOAD）
    ghostlock.so 带 constructor 入口，加载即自动执行
 
@@ -39,8 +72,9 @@
 | 3 | W1 写入无效（route success 但 SELinux 不变） | 写入源 `*(base+0x100)` 内容环境相关（0 或 0x41） | `util.c` 把 skb 偏移 0xf80 显式写 0 |
 | 4 | ghostlock 进程被 LMK 杀 | fork ~400 子进程触发后台 cgroup 回收 | MM_PARTIALS 5→2、prepare 8x→5x、fork 每 8 个 usleep、碰撞前提前清理 |
 | 5 | **KernelSU 永远不激活（.ghostlock_ksu.log 不存在）** | root shell exec 时继承 `LD_PRELOAD` → constructor 在 root 上下文无限重跑，root script 永不执行 | `main.c` exec root script 前 `unsetenv("LD_PRELOAD")` |
+| 6 | woshi preload（beryl/rodin）默认路径不可写 | 读 `KSUD_DST` 等环境变量，默认 `/data/local/tmp` | `exploit.js` 注入 `KSUD_DST/KSUD_LOG` 到 Firefox 私有目录 |
 
-第 5 条是最隐蔽的：现象是 W1/W2 都过、日志显示 `child is root!`，但 KernelSU 一直是"未安装+越狱按钮"，且 `.ghostlock_ksu.log` 不存在。根因是 root shell 链继承 LD_PRELOAD 导致递归重跑（日志会出现多个 uid=0 的 startup context）。
+第 5 条最隐蔽：现象是 W1/W2 都过、日志显示 `child is root!`，但 KernelSU 一直是"未安装+越狱按钮"，且 `.ghostlock_ksu.log` 不存在。根因是 root shell 链继承 LD_PRELOAD 导致递归重跑（日志出现多个 uid=0 的 startup context）。
 
 ## ghostlock.so 编译
 
@@ -73,49 +107,63 @@ llvm-readelf -sW ghostlock.so | grep ghostlock_preload_init
 ghostlock.so **内置 22 个内核偏移表**，运行时按 `uname -r` 自动匹配，通用性极强。
 
 1. 确认目标机型内核在 22 表里（见下方清单，或对比 `uname -r`）
-2. `manifest.json` 加一条：
+2. `manifest.json` 的 ghostlock 组加一条：
    ```json
-   {"name": "机型名 (ghostlock)", "kernel": "uname -r", "so": "so/ghostlock.so?v=6", "spawn": true}
+   {"name": "机型名 (ghostlock)", "kernel": "uname -r", "so": "so/ghostlock.so?v=6", "spawn": true, "vendor": "厂商", "brand": "品牌"}
    ```
 3. Firefox（≤151.0）无痕打开网页 → 选机型 → 获取 Root
 4. 看日志 outcome：
-   - `ksu` = 完整成功
+   - `ksu` = 完整成功（KernelSU 激活）
    - `root`/`rootNoKsu` = 拿到 root 但 late-load 未确认（看 ksu log）
    - `w1fail`/`collfail`/`killed` = 概率性失败，重启后重试
 
-**内核不在 22 表里** → 用 RootTool APK 的"解析卡刷包"功能生成 offsets.json，
-放入网页根目录或导入。
+**内核不在 22 表里** → 用 YuKongA 原仓库的 `extract_rs` 工具（见下方"偏移提取教程"）
+生成 offsets.json，放入网页根目录或导入。
 
-**测试要点**（概率性 exploit 的环境要求）：
-- Firefox 全程前台（后台 cgroup 会被 LMK 杀）
-- 重启后立即测（系统最干净）
-- 每次测试间隔 5 分钟以上，别连续跑（会触发 watchdog 重启）
+## 支持机型清单（GhostLock 方案，22 内核）
 
-## 支持机型清单（ghostlock，22 内核）
+### 小米集团
 
-| 机型 | uname -r |
-|------|----------|
-| Xiaomi 17 / 17 Pro / 17 Pro Max / 17 Ultra | 6.12.23-...-g75e9b1c7ae7c-... |
-| REDMI K90 Pro Max | 6.12.23-...-g16e473de48a3-... |
-| OPPO Find X9 / X9 Pro | 6.12.23-...-g82efd98459a2-... |
-| OnePlus 15 (×2 内核) | 6.12.23-...-ga8f88ad96df3 / gb2a876903b49 |
-| Red Magic 11 Pro / Tablet 5 Pro | 6.12.23-...-gf1bdb13583da-... |
-| REDMI Note 15 4G / POCO M6 Pro 4G | 6.12.30-...-g6e872b4863d6-... |
-| OnePlus 15T | 6.12.38-...-g844001fb8721-... |
-| Xiaomi 17T (×2 内核) | 6.6.102-...-gb01b41c2647c / gfe76d1bc97fd |
-| OPPO Find N5 | 6.6.118-...-g2e6b9c3812c5-... |
-| REDMI K90 Ultra (×2 内核) | 6.6.118-...-g608a629fedf7 / ge56cf6b09cca |
-| OPPO Find X8 Ultra / OnePlus 13 / ACE 5 Pro | 6.6.118-...-g93e223c276e7-... |
-| REDMI K80 Pro / Turbo 5 Max / POCO X8 Pro Max / Pad 7 Ultra | 6.6.118-...-gc44b714366cc-... |
-| OPPO Pad 5 / OnePlus Pad 2 | 6.6.118-...-ge58033dc8ea6-... |
-| OPPO Find X8 / X8 Pro | 6.6.118-...-gebdfad32d749-... |
-| Xiaomi Civi 5 Pro / K90 / POCO F7 | 6.6.77-...-g4a507830d890-... |
-| Xiaomi 15 | 6.6.77-...-g63ce7556864c-... |
-| Xiaomi 15 Pro / K80 Pro / K80 Ultra | 6.6.77-...-gca30f3b4bef6-... |
-| OPPO Pad 4 Pro | 6.6.89-...-g096cdb6ecefc-... |
-| OnePlus 13 | 6.6.89-...-gf4dc45704e54-... |
+**小米**
 
-完整 22 个内核名见 `manifest.json`（`kernel` 字段）或 `src/kernels/` 目录。
+- Xiaomi 17 / 17 Pro / 17 Pro Max / 17 Ultra  ✅实测 — `6.12.23-android16-5-g75e9b1c7ae7c-abogki463945075-4k`
+- Xiaomi 17T (b01b) — `6.6.102-android15-8-gb01b41c2647c-ab15574720-4k`
+- Xiaomi 17T (fe76) — `6.6.102-android15-8-gfe76d1bc97fd-ab14689815-4k`
+- Xiaomi Civi 5 Pro / K90 / POCO F7 — `6.6.77-android15-8-g4a507830d890-ab13636293-4k`
+- Xiaomi 15 — `6.6.77-android15-8-g63ce7556864c-ab13994517-4k`
+- Xiaomi 15 Pro / K80 Pro / K80 Ultra — `6.6.77-android15-8-gca30f3b4bef6-abogki440974771-4k`
+- 小米 14 (beryl) — `6.6 系列（预编译，机型专用）`
+**红米**
+
+- REDMI Note 15 4G / POCO M6 Pro 4G — `6.12.30-android16-5-g6e872b4863d6-ab13847919-4k`
+- REDMI K90 Pro Max — `6.12.23-android16-5-g16e473de48a3-abogki462654244-4k`
+- REDMI K90 Ultra (608a) — `6.6.118-android15-8-g608a629fedf7-ab15154340-4k`
+- REDMI K80 Pro / Turbo 5 Max / POCO X8 Pro Max / Pad 7 Ultra — `6.6.118-android15-8-gc44b714366cc-abogki519650608-4k`
+- REDMI K90 Ultra / POCO F7 — `6.6.118-android15-8-ge56cf6b09cca-ab15511674-4k`
+- Redmi K70 / K80 Pro (rodin) — `6.6 系列（预编译，机型专用）`
+### OPPO 集团
+
+**OPPO**
+
+- OPPO Find X9 / X9 Pro — `6.12.23-android16-5-g82efd98459a2-ab14457512-4k`
+- OPPO Find N5 — `6.6.118-android15-8-g2e6b9c3812c5-ab15114928-4k`
+- OPPO Find X8 Ultra / OnePlus 13 / ACE 5 Pro — `6.6.118-android15-8-g93e223c276e7-abogki500782043-4k`
+- OPPO Pad 5 / OnePlus Pad 2 — `6.6.118-android15-8-ge58033dc8ea6-abogki498046332-4k`
+- OPPO Find X8 / X8 Pro — `6.6.118-android15-8-gebdfad32d749-ab15099304-4k`
+- OPPO Pad 4 Pro — `6.6.89-android15-8-g096cdb6ecefc-ab14358676-4k`
+**一加**
+
+- OnePlus 15T — `6.12.38-android16-5-g844001fb8721-ab14552068-4k`
+- OnePlus 15 (a8f88) — `6.12.23-android16-5-ga8f88ad96df3-ab13929693-4k`
+- OnePlus 15 (b2a87) — `6.12.23-android16-5-gb2a876903b49-ab14541642-4k`
+- OnePlus 13 — `6.6.89-android15-8-gf4dc45704e54-abogki446052083-4k`
+### 努比亚/红魔
+
+**红魔**
+
+- Red Magic 11 Pro / Tablet 5 Pro — `6.12.23-android16-5-gf1bdb13583da-ab13761046-4k`
+
+完整内核名见 `manifest.json`（`kernel` 字段）。
 
 ## 各 .so 来源对照
 
@@ -126,7 +174,7 @@ ghostlock.so **内置 22 个内核偏移表**，运行时按 `uname -r` 自动�
 | GhostLock 组 | `so/woshi_rodin.so`（K70） | 同上 | 同上 |
 | IonStack 组 | `so/iqoo_neo11.so` 等 10 个 | [hexo141/Rootme](https://github.com/hexo141/Rootme)（搬运 [NebuSec/CyberMeowfia](https://github.com/NebuSec/CyberMeowfia)） | IonStack physrw → su daemon |
 
-> 本仓库不重复造轮子：GhostLock 组用 YuKongA 源码编译（仅加 constructor 入口 + 上述 5 个修复），
+> 本仓库不重复造轮子：GhostLock 组用 YuKongA 源码编译（仅加 constructor 入口 + 上述 6 个修复），
 > IonStack 组直接搬运 hexo141 的预编译 .so（反编译验证过无恶意）。
 
 ## 偏移提取教程（直接用原仓库方法）
@@ -153,10 +201,11 @@ https://github.com/YuKongA/ghostlock-app#offset-extraction
 **网页端接入**：把 `offsets.json` 放到网页根目录（或导入），ghostlock 运行时会在
 `$GHOSTLOCK_HOME/offsets.json` 查找外部偏移（内置表优先，外部表补缺）。
 
-## 相关仓库
+## 上游项目
 
-- 网页本项目：github.com/d1667018881/myroot
-- APK 项目（已成功，正式签名 v6）：github.com/d1667018881/RootTool
-- ghostlock 源码来源：github.com/YuKongA/ghostlock-app
-- 网页 JIT 漏洞参考：hexo141/Rootme、NebuSec/CyberMeowfia
-- preload.so 变体：woshimaniubi8/CVE-2026-43499-root-KernelSU
+本项目的核心组件均来自以下开源项目，特此致谢：
+
+- [YuKongA/ghostlock-app](https://github.com/YuKongA/ghostlock-app) — GhostLock 源码（CVE-2026-43499，22 内核偏移表）
+- [woshimaniubi8/CVE-2026-43499-root-KernelSU](https://github.com/woshimaniubi8/CVE-2026-43499-root-KernelSU) — beryl/rodin 预编译 preload.so（内置 KernelSU）
+- [NebuSec/CyberMeowfia](https://github.com/NebuSec/CyberMeowfia) — IonStack 全套源码（Firefox JIT + 内核 exploit 原版）
+- [hexo141/Rootme](https://github.com/hexo141/Rootme) — IonStack 方案的 .so 搬运来源
