@@ -15,7 +15,24 @@ function customAlert(message) {
   return new Promise((resolve) => {
     const overlay = document.createElement("div");
     overlay.className = "modal-overlay";
-    overlay.innerHTML = '<div class="modal-card"><div class="modal-msg">' + String(message).replace(/</g,"&lt;").replace(/>/g,"&gt;") + '</div><div class="modal-btns"><button class="modal-btn modal-btn-primary" id="modal-ok">确定</button></div></div>';
+    overlay.innerHTML = '<div class="modal-card"><div class="modal-msg">' + String(message).replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/\n/g,"<br>") + '</div><div class="modal-btns"><button class="modal-btn modal-btn-primary" id="modal-ok">确定</button></div></div>';
+    document.body.appendChild(overlay);
+    applyModalGlass(overlay);
+    overlay.querySelector("#modal-ok").onclick = () => { closeOverlay(overlay, () => resolve()); };
+  });
+}
+function customAlertWithLinks(message, links) {
+  return new Promise((resolve) => {
+    const overlay = document.createElement("div");
+    overlay.className = "modal-overlay";
+    const msg = String(message).replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/\n/g,"<br>");
+    let linksHtml = "";
+    (links || []).forEach(function(l) {
+      const label = String(l.label || l.url).replace(/</g,"&lt;").replace(/>/g,"&gt;");
+      const url = String(l.url || "").replace(/"/g,"&quot;");
+      linksHtml += '<div style="margin:8px 0;"><a class="modal-link" href="' + url + '" target="_blank" rel="noopener">' + label + '</a></div>';
+    });
+    overlay.innerHTML = '<div class="modal-card"><div class="modal-msg">' + msg + '</div>' + linksHtml + '<div class="modal-btns"><button class="modal-btn modal-btn-primary" id="modal-ok">确定</button></div></div>';
     document.body.appendChild(overlay);
     applyModalGlass(overlay);
     overlay.querySelector("#modal-ok").onclick = () => { closeOverlay(overlay, () => resolve()); };
