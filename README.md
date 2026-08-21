@@ -296,11 +296,17 @@ llvm-readelf -x .init_array xxx.so   # 应有指向用户 constructor 的指针
 
 ### 已确认的漏洞利用事实（供参考，避免重复调研）
 
-- CVE-2026-43074（eventpoll UAF）：**Android GKI 5.10 未修复**（ep_free 直接 kfree），untrusted_app 可达
-- CVE-2026-64560（timer race）：**Android GKI 5.10 未修复**（无内存屏障），untrusted_app 可达
+- CVE-2026-43074（eventpoll UAF）：**Android GKI 5.10 未修复**（ep_free 直接 kfree），
+  **但 NebuSec 的 exploit 硬性要求 uid=2000 + u:r:shell:s0**（shell→root 设计），untrusted_app 不可用
+- CVE-2026-64560（timer race）：**Android GKI 5.10 未修复**（无内存屏障），
+  **同样硬性要求 shell 权限**（shell_security_gate 检查 uid=2000 + shell 域）
 - CVE-2026-43499（futex）：影响所有内核，但 exploit 需 BTF 算偏移，老内核无 BTF 卡死
 - KGSL/IMQS（AxManager 方案）：老内核可用，但入口需要 shell 权限（untrusted_app 够不着）
-- myroot 网页方案执行层是 untrusted_app，只适用"系统调用入口"的漏洞（futex/epoll/timer）
+- **核心结论：K60（5.10）的 untrusted_app 层级没有任何可用 exploit**
+  （futex 无 BTF / eventpoll+timer 要 shell / KGSL+IMQS 入口关闭）
+  → 网页方案只适用于"untrusted_app 可达且 exploit 不依赖 shell 环境"的漏洞
+- shell 权限（adb/AxManager/Shizuku）下可用的 K60 方案：
+  ① AxManager 插件（KGSL+IMQS，已验证）② 未来适配 43074/64560（更干净，工程量大）
 
 ## 偏移提取教程（直接用原仓库方法）
 
