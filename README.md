@@ -310,7 +310,29 @@ llvm-readelf -x .init_array xxx.so   # 应有指向用户 constructor 的指针
 
 ## 偏移提取教程（直接用原仓库方法）
 
-新机型内核不在内置 22 表里时，用 YuKongA 原仓库的 `tools/extract_rs` 提取偏移：
+**特殊场景：GKI 老内核（5.10 无 BTF）怎么拿偏移**（如 K60，cve-2026-43499 可行性的关键）：
+
+```
+K60 内核 = 5.10.160-gki-ge2aba97d850c（GKI！）
+futex 入口 untrusted_app 可达 ✅ + 漏洞通杀 ✅
+唯一障碍: K60 boot.img 无 BTF → 结构体偏移算不出
+
+解法（GKI 源码/官方镜像公开，不依赖设备自身 BTF）:
+1. 确认内核是 GKI（uname 含 -gki-）
+2. 找对应 GKI 分支的带 BTF vmlinux:
+   a. ci.android.com: builds/branches/aosp_kernel-common-android12-5.10/status.json
+      拿 kernel_aarch64 的 last_known_good_build id，再找 artifact 下载（页面 view 里找链接）
+   b. Pixel 6（oriole，android12-5.10 设备）factory image 的 boot.img → 提取 vmlinux（带 BTF）
+   c. android12-5.10 源码 + gki_defconfig 编译（慢但可靠）
+3. 用 extract_rs 处理带 BTF 的 vmlinux（boot.img）→ 生成完整 offsets.json
+   （或 pahole -C task_struct vmlinux 直接看字段偏移）
+4. 生成 K60 offsets.json → 编译 ghostlock → 网页方案测试
+
+⚠️ 注意: 5.10 的 task_struct 布局与 6.6/6.12 不同，exploit 代码（pselect/futex 机制）
+可能需微调，不只是偏移表。已验证: 厂商 GKI 内核结构一般与官方一致（可先用官方偏移试）
+```
+
+新机型内核不在内置 25 表里时，用 YuKongA 原仓库的 `tools/extract_rs` 提取偏移：
 
 ```bash
 # 方式 1：本地 boot.img
