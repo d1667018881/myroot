@@ -11,7 +11,7 @@
 
 | 分组 | 漏洞 | 提权方式 | root 管理 | 适用机型 |
 |------|------|---------|----------|---------|
-| **GhostLock 方案** | CVE-2026-43499 futex PI UAF | W1/W2/W3 三步提权 | KernelSU（App 授权） | 22 个新内核 + 2 个预编译 |
+| **GhostLock 方案** | CVE-2026-43499 futex PI UAF | W1/W2/W3 三步提权 | KernelSU（App 授权） | 23 个新内核 + 2 个预编译 |
 | **IonStack 方案** | NebuSec IonStack | physrw 物理读写 | su daemon（裸 root） | 10 个（hexo141 搬运） |
 
 两组都共用同一入口：Firefox JIT 漏洞拿 shell → 上传 .so 提权，区别只在 .so 的实现。
@@ -120,9 +120,9 @@ ghostlock.so **内置 22 个内核偏移表**，运行时按 `uname -r` 自动�
 **内核不在 22 表里** → 用 YuKongA 原仓库的 `extract_rs` 工具（见下方"偏移提取教程"）
 生成 offsets.json，放入网页根目录或导入。
 
-## 支持机型清单（共 37 个设备）
+## 支持机型清单（共 38 个设备）
 
-### GhostLock 方案（27 个 · CVE-2026-43499 futex → KernelSU）
+### GhostLock 方案（28 个 · CVE-2026-43499 futex → KernelSU）
 
 ### 小米集团
 
@@ -143,6 +143,7 @@ ghostlock.so **内置 22 个内核偏移表**，运行时按 `uname -r` 自动�
 - REDMI K80 Pro / Turbo 5 Max / POCO X8 Pro Max / Pad 7 Ultra — `6.6.118-android15-8-gc44b714366cc-abogki519650608-4k`
 - REDMI K90 Ultra / POCO F7 — `6.6.118-android15-8-ge56cf6b09cca-ab15511674-4k`
 - Redmi K70 / K80 Pro (rodin) — `6.6 系列（预编译，机型专用）`
+- Redmi K60（澎湃 OS3）— `5.10.160-gki-ge2aba97d850c`（首个 5.10 条目，待实测）
 **POCO**
 
 - POCO X8 Pro Max — `6.6.89-android15-8-g0889fe95bb10-ab14402178-4k`
@@ -327,6 +328,19 @@ futex 入口 untrusted_app 可达 ✅ + 漏洞通杀 ✅
 3. 用 extract_rs 处理带 BTF 的 vmlinux（boot.img）→ 生成完整 offsets.json
    （或 pahole -C task_struct vmlinux 直接看字段偏移）
 4. 生成 K60 offsets.json → 编译 ghostlock → 网页方案测试
+
+✅ K60 已实测落地（2026-08）:
+   - 设备自带 BTF（root 提取 /sys/kernel/btf/vmlinux，164773 类型）解析确认:
+     task_struct 关键偏移（prio/pi_lock/pi_waiters/pi_top_task/pi_blocked_on/
+     pid/tgid/atomic_flags/real_cred/cred/comm/tasks/seccomp）与 6.12 **完全一致**
+   - rt_mutex_waiter（tree=0x0/pi_tree=0x28/task=0x50）、cred（uid=0x8/
+     security=0x80）、struct page（0x40/0x8/0x30）均与 target.h 默认一致
+   - 符号偏移（init_task/init_cred/selinux_*/slide_*）由卡刷包 payload 的
+     kallsyms 恢复（extract_rs，142761 符号）
+   - 适配项: kernel_phys_load=0x80000000（高通 GKI）、
+     kimage_text_base=0xffffffc008000000（K60 5.10 与 oplus 6.6 的
+     0xffffffc080000000 不同，已加运行时动态支持）
+   - 状态: 已编入网页 ghostlock.so（v9），待 K60 实机验证
 
 ⚠️ 注意: 5.10 的 task_struct 布局与 6.6/6.12 不同，exploit 代码（pselect/futex 机制）
 可能需微调，不只是偏移表。已验证: 厂商 GKI 内核结构一般与官方一致（可先用官方偏移试）
