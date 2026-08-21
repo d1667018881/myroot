@@ -217,6 +217,91 @@ ghostlock.so **内置 22 个内核偏移表**，运行时按 `uname -r` 自动�
 > 本仓库不重复造轮子：GhostLock 组用 YuKongA 源码编译（仅加 constructor 入口 + 上述 6 个修复），
 > IonStack 组直接搬运 hexo141 的预编译 .so（反编译验证过无恶意）。
 
+## 新增国产机型 .so 抓取指南（重要！新会话必读）
+
+> 本仓库的 .so 全部来自下方开源仓库。**新增机型时按此 SOP 操作**，
+> 不依赖历史记忆，所有信息都在这里。
+
+### 来源仓库（抓 .so 的地方）
+
+| 来源 | 内容 | 获取方式 |
+|------|------|---------|
+| [hexo141/Rootme](https://github.com/hexo141/Rootme) | IonStack 方案 .so（iqoo/oppo/realme/k40 等） | 仓库内直接下载（`so/` 或 releases） |
+| [woshimaniubi8/CVE-2026-43499-root-KernelSU](https://github.com/woshimaniubi8/CVE-2026-43499-root-KernelSU) | beryl/rodin preload.so（4.6MB，内置 KernelSU） | 仓库下载 |
+| [YuKongA/ghostlock-app](https://github.com/YuKongA/ghostlock-app) | ghostlock 源码（编译 .so） | 源码编译（见上文"ghostlock.so 编译"） |
+| [NebuSec/CyberMeowfia](https://github.com/NebuSec/CyberMeowfia) | 原版 IonStack 全套源码（含 CVE-2026-43074/64560 等新漏洞） | 源码（需适配） |
+| 酷安（羊了个羊、墨夜my 等） | AxManager 插件、KGSL/IMQS 漏洞工具（如 K60 临时 root） | 人工获取后入库 |
+
+### 抓取 + 入库 SOP
+
+```
+1. 从来源仓库下载目标机型的 .so
+   GitHub API: GET /repos/{owner}/{repo}/contents/{path}
+   注意 >1MB 的文件用 git blobs API（contents API 会截断）
+
+2. 安全检查（必做，防恶意代码）——见下方"反编译验证清单"
+
+3. 放入 myroot/so/ 目录
+
+4. manifest.json 添加设备条目（照抄现有条目格式）：
+   {
+     "name": "机型名",
+     "kernel": "完整 uname -r（或描述）",
+     "so": "so/文件名",
+     "spawn": true,          // ghostlock 方案必填 true
+     "source": "原仓库名",
+     "sourceUrl": "https://github.com/...",
+     "vendor": "xiaomi/oppo/vivo/nubia/other",   // 排序用
+     "brand": "小米/红米/OPPO/一加/realme/iQOO/红魔"  // 排序用
+   }
+
+5. 分组规则：
+   - GhostLock 组（futex PI UAF → KernelSU）：spawn:true
+   - IonStack 组（physrw → su daemon）：spawn 缺省
+
+6. 上传 GitHub（push 到 main，触发 Pages 自动更新）
+7. 验证：Firefox ≤151.0 无痕打开网页 → 选机型 → 获取 Root
+```
+
+### 反编译验证清单（安全检查，每次必做）
+
+```bash
+# 1. 确认架构（应为 ARM64）
+file xxx.so
+# 期望: ELF 64-bit LSB pie executable, ARM aarch64
+
+# 2. 恶意特征字符串扫描（网络外传/危险行为）
+strings -n 6 xxx.so | grep -iE "socket|connect|http://|https://|curl|wget|mkfifo|rm -rf|/data/|/sdcard/"
+
+# 3. 导入函数检查（异常网络/进程行为）
+llvm-readelf -sW xxx.so | grep UND | grep -iE "socket|connect|send|recv|execve|system"
+# 干净的 exploit 只应有: open/ioctl/mmap/memcpy/futex 等系统调用
+
+# 4. 与声明漏洞对比（ghostlock 应有 futex/pselect/kernelsnitch 特征）
+strings -n 8 xxx.so | grep -iE "futex|pselect|kernelsnitch|GHOSTLOCK_HOME"
+
+# 5. 检查 constructor 入口（LD_PRELOAD 触发用）
+llvm-readelf -x .init_array xxx.so   # 应有指向用户 constructor 的指针
+```
+
+### 机型匹配规则（重要）
+
+- **每个 .so 是内核/机型特定的**，不能跨机型通用（偏移和地址写死）
+- 新增机型先确认内核 `uname -r`：
+  - 在 ghostlock 25 内核表 → 直接用 `so/ghostlock.so`
+  - 不在表里 → 需要 offsets.json（见"偏移提取教程"）或找该机型的专用 .so
+- **老内核（5.x/6.1）无 BTF** → extract_rs 算不出结构体偏移，ghostlock 不可用；
+  可考虑 NebuSec 新漏洞（CVE-2026-43074 eventpoll / CVE-2026-64560 timer，untrusted_app 可达）
+  或 KGSL/IMQS 类方案（需要 shell 权限）
+
+### 已确认的漏洞利用事实（供参考，避免重复调研）
+
+- CVE-2026-43074（eventpoll UAF）：**Android GKI 5.10 未修复**（ep_free 直接 kfree），untrusted_app 可达
+- CVE-2026-64560（timer race）：**Android GKI 5.10 未修复**（无内存屏障），untrusted_app 可达
+- CVE-2026-43499（futex）：影响所有内核，但 exploit 需 BTF 算偏移，老内核无 BTF 卡死
+- KGSL/IMQS（AxManager 方案）：老内核可用，但入口需要 shell 权限（untrusted_app 够不着）
+- myroot 网页方案执行层是 untrusted_app，只适用"系统调用入口"的漏洞（futex/epoll/timer）
+
 ## 偏移提取教程（直接用原仓库方法）
 
 新机型内核不在内置 22 表里时，用 YuKongA 原仓库的 `tools/extract_rs` 提取偏移：
