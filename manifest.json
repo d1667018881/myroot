@@ -1,379 +1,389 @@
 {
-  "version": 5,
-  "note": "自用设备列表；分组显示，GhostLock 组优先",
-  "groups": [
+ "version": 6,
+ "note": "自用设备列表；分组显示，GhostLock 组优先",
+ "groups": [
+  {
+   "id": "ghostlock",
+   "name": "GhostLock 方案（KernelSU 授权管理）",
+   "desc": "CVE-2026-43499 futex PI UAF，提权后走 KernelSU，可授权管理",
+   "devices": [
     {
-      "id": "ghostlock",
-      "name": "GhostLock 方案（KernelSU 授权管理）",
-      "desc": "CVE-2026-43499 futex PI UAF，提权后走 KernelSU，可授权管理",
-      "devices": [
-        {
-          "name": "Xiaomi 17 / 17 Pro / 17 Pro Max / 17 Ultra  ✅实测",
-          "kernel": "6.12.23-android16-5-g75e9b1c7ae7c-abogki463945075-4k",
-          "so": "so/ghostlock.so?v=8",
-          "spawn": true,
-          "source": "YuKongA/ghostlock-app",
-          "sourceUrl": "https://github.com/YuKongA/ghostlock-app",
-          "verified": true,
-          "vendor": "xiaomi",
-          "brand": "小米"
-        },
-        {
-          "name": "Xiaomi 17T (b01b)",
-          "kernel": "6.6.102-android15-8-gb01b41c2647c-ab15574720-4k",
-          "so": "so/ghostlock.so?v=8",
-          "spawn": true,
-          "source": "YuKongA/ghostlock-app",
-          "sourceUrl": "https://github.com/YuKongA/ghostlock-app",
-          "vendor": "xiaomi",
-          "brand": "小米"
-        },
-        {
-          "name": "Xiaomi 17T (fe76)",
-          "kernel": "6.6.102-android15-8-gfe76d1bc97fd-ab14689815-4k",
-          "so": "so/ghostlock.so?v=8",
-          "spawn": true,
-          "source": "YuKongA/ghostlock-app",
-          "sourceUrl": "https://github.com/YuKongA/ghostlock-app",
-          "vendor": "xiaomi",
-          "brand": "小米"
-        },
-        {
-          "name": "Xiaomi Civi 5 Pro / K90 / POCO F7",
-          "kernel": "6.6.77-android15-8-g4a507830d890-ab13636293-4k",
-          "so": "so/ghostlock.so?v=8",
-          "spawn": true,
-          "source": "YuKongA/ghostlock-app",
-          "sourceUrl": "https://github.com/YuKongA/ghostlock-app",
-          "vendor": "xiaomi",
-          "brand": "小米"
-        },
-        {
-          "name": "Xiaomi 15",
-          "kernel": "6.6.77-android15-8-g63ce7556864c-ab13994517-4k",
-          "so": "so/ghostlock.so?v=8",
-          "spawn": true,
-          "source": "YuKongA/ghostlock-app",
-          "sourceUrl": "https://github.com/YuKongA/ghostlock-app",
-          "vendor": "xiaomi",
-          "brand": "小米"
-        },
-        {
-          "name": "Xiaomi 15 Pro / K80 Pro / K80 Ultra",
-          "kernel": "6.6.77-android15-8-gca30f3b4bef6-abogki440974771-4k",
-          "so": "so/ghostlock.so?v=8",
-          "spawn": true,
-          "source": "YuKongA/ghostlock-app",
-          "sourceUrl": "https://github.com/YuKongA/ghostlock-app",
-          "vendor": "xiaomi",
-          "brand": "小米"
-        },
-        {
-          "name": "小米 14 (beryl)",
-          "kernel": "6.6 系列（预编译，机型专用）",
-          "so": "so/woshi_beryl.so",
-          "source": "woshimaniubi8/CVE-2026-43499-root-KernelSU",
-          "sourceUrl": "https://github.com/woshimaniubi8/CVE-2026-43499-root-KernelSU",
-          "vendor": "xiaomi",
-          "brand": "小米"
-        },
-        {
-          "name": "REDMI Note 15 4G / POCO M6 Pro 4G",
-          "kernel": "6.12.30-android16-5-g6e872b4863d6-ab13847919-4k",
-          "so": "so/ghostlock.so?v=8",
-          "spawn": true,
-          "source": "YuKongA/ghostlock-app",
-          "sourceUrl": "https://github.com/YuKongA/ghostlock-app",
-          "vendor": "xiaomi",
-          "brand": "红米"
-        },
-        {
-          "name": "REDMI K90 Pro Max",
-          "kernel": "6.12.23-android16-5-g16e473de48a3-abogki462654244-4k",
-          "so": "so/ghostlock.so?v=8",
-          "spawn": true,
-          "source": "YuKongA/ghostlock-app",
-          "sourceUrl": "https://github.com/YuKongA/ghostlock-app",
-          "vendor": "xiaomi",
-          "brand": "红米"
-        },
-        {
-          "name": "REDMI K90 Ultra (608a)",
-          "kernel": "6.6.118-android15-8-g608a629fedf7-ab15154340-4k",
-          "so": "so/ghostlock.so?v=8",
-          "spawn": true,
-          "source": "YuKongA/ghostlock-app",
-          "sourceUrl": "https://github.com/YuKongA/ghostlock-app",
-          "vendor": "xiaomi",
-          "brand": "红米"
-        },
-        {
-          "name": "REDMI K80 Pro / Turbo 5 Max / POCO X8 Pro Max / Pad 7 Ultra",
-          "kernel": "6.6.118-android15-8-gc44b714366cc-abogki519650608-4k",
-          "so": "so/ghostlock.so?v=8",
-          "spawn": true,
-          "source": "YuKongA/ghostlock-app",
-          "sourceUrl": "https://github.com/YuKongA/ghostlock-app",
-          "vendor": "xiaomi",
-          "brand": "红米"
-        },
-        {
-          "name": "REDMI K90 Ultra / POCO F7",
-          "kernel": "6.6.118-android15-8-ge56cf6b09cca-ab15511674-4k",
-          "so": "so/ghostlock.so?v=8",
-          "spawn": true,
-          "source": "YuKongA/ghostlock-app",
-          "sourceUrl": "https://github.com/YuKongA/ghostlock-app",
-          "vendor": "xiaomi",
-          "brand": "红米"
-        },
-        {
-          "name": "Redmi K70 / K80 Pro (rodin)",
-          "kernel": "6.6 系列（预编译，机型专用）",
-          "so": "so/woshi_rodin.so",
-          "source": "woshimaniubi8/CVE-2026-43499-root-KernelSU",
-          "sourceUrl": "https://github.com/woshimaniubi8/CVE-2026-43499-root-KernelSU",
-          "vendor": "xiaomi",
-          "brand": "红米"
-        },
-        {
-          "name": "POCO X8 Pro Max",
-          "kernel": "6.6.89-android15-8-g0889fe95bb10-ab14402178-4k",
-          "so": "so/ghostlock.so?v=8",
-          "spawn": true,
-          "source": "YuKongA/ghostlock-app",
-          "sourceUrl": "https://github.com/YuKongA/ghostlock-app",
-          "vendor": "xiaomi",
-          "brand": "POCO"
-        },
-        {
-          "name": "OPPO Find X9 / X9 Pro",
-          "kernel": "6.12.23-android16-5-g82efd98459a2-ab14457512-4k",
-          "so": "so/ghostlock.so?v=8",
-          "spawn": true,
-          "source": "YuKongA/ghostlock-app",
-          "sourceUrl": "https://github.com/YuKongA/ghostlock-app",
-          "vendor": "oppo",
-          "brand": "OPPO"
-        },
-        {
-          "name": "OPPO Find N5",
-          "kernel": "6.6.118-android15-8-g2e6b9c3812c5-ab15114928-4k",
-          "so": "so/ghostlock.so?v=8",
-          "spawn": true,
-          "source": "YuKongA/ghostlock-app",
-          "sourceUrl": "https://github.com/YuKongA/ghostlock-app",
-          "vendor": "oppo",
-          "brand": "OPPO"
-        },
-        {
-          "name": "OPPO Find X8 Ultra / OnePlus 13 / ACE 5 Pro",
-          "kernel": "6.6.118-android15-8-g93e223c276e7-abogki500782043-4k",
-          "so": "so/ghostlock.so?v=8",
-          "spawn": true,
-          "source": "YuKongA/ghostlock-app",
-          "sourceUrl": "https://github.com/YuKongA/ghostlock-app",
-          "vendor": "oppo",
-          "brand": "OPPO"
-        },
-        {
-          "name": "OPPO Pad 5 / OnePlus Pad 2",
-          "kernel": "6.6.118-android15-8-ge58033dc8ea6-abogki498046332-4k",
-          "so": "so/ghostlock.so?v=8",
-          "spawn": true,
-          "source": "YuKongA/ghostlock-app",
-          "sourceUrl": "https://github.com/YuKongA/ghostlock-app",
-          "vendor": "oppo",
-          "brand": "OPPO"
-        },
-        {
-          "name": "OPPO Find X8 / X8 Pro",
-          "kernel": "6.6.118-android15-8-gebdfad32d749-ab15099304-4k",
-          "so": "so/ghostlock.so?v=8",
-          "spawn": true,
-          "source": "YuKongA/ghostlock-app",
-          "sourceUrl": "https://github.com/YuKongA/ghostlock-app",
-          "vendor": "oppo",
-          "brand": "OPPO"
-        },
-        {
-          "name": "OPPO Pad 4 Pro",
-          "kernel": "6.6.89-android15-8-g096cdb6ecefc-ab14358676-4k",
-          "so": "so/ghostlock.so?v=8",
-          "spawn": true,
-          "source": "YuKongA/ghostlock-app",
-          "sourceUrl": "https://github.com/YuKongA/ghostlock-app",
-          "vendor": "oppo",
-          "brand": "OPPO"
-        },
-        {
-          "name": "OnePlus 15T",
-          "kernel": "6.12.38-android16-5-g844001fb8721-ab14552068-4k",
-          "so": "so/ghostlock.so?v=8",
-          "spawn": true,
-          "source": "YuKongA/ghostlock-app",
-          "sourceUrl": "https://github.com/YuKongA/ghostlock-app",
-          "vendor": "oppo",
-          "brand": "一加"
-        },
-        {
-          "name": "OnePlus 15 (a8f88)",
-          "kernel": "6.12.23-android16-5-ga8f88ad96df3-ab13929693-4k",
-          "so": "so/ghostlock.so?v=8",
-          "spawn": true,
-          "source": "YuKongA/ghostlock-app",
-          "sourceUrl": "https://github.com/YuKongA/ghostlock-app",
-          "vendor": "oppo",
-          "brand": "一加"
-        },
-        {
-          "name": "OnePlus 15 (b2a87)",
-          "kernel": "6.12.23-android16-5-gb2a876903b49-ab14541642-4k",
-          "so": "so/ghostlock.so?v=8",
-          "spawn": true,
-          "source": "YuKongA/ghostlock-app",
-          "sourceUrl": "https://github.com/YuKongA/ghostlock-app",
-          "vendor": "oppo",
-          "brand": "一加"
-        },
-        {
-          "name": "OnePlus 13",
-          "kernel": "6.6.89-android15-8-gf4dc45704e54-abogki446052083-4k",
-          "so": "so/ghostlock.so?v=8",
-          "spawn": true,
-          "source": "YuKongA/ghostlock-app",
-          "sourceUrl": "https://github.com/YuKongA/ghostlock-app",
-          "vendor": "oppo",
-          "brand": "一加"
-        },
-        {
-          "name": "Red Magic 11 Pro / Tablet 5 Pro",
-          "kernel": "6.12.23-android16-5-gf1bdb13583da-ab13761046-4k",
-          "so": "so/ghostlock.so?v=8",
-          "spawn": true,
-          "source": "YuKongA/ghostlock-app",
-          "sourceUrl": "https://github.com/YuKongA/ghostlock-app",
-          "vendor": "nubia",
-          "brand": "红魔"
-        },
-        {
-          "name": "Red Magic 10 Pro / 11 Air / Tablet 3 Pro",
-          "kernel": "6.6.92-android15-8-g3637f4904cf5-ab13944661-4k",
-          "so": "so/ghostlock.so?v=8",
-          "spawn": true,
-          "source": "YuKongA/ghostlock-app",
-          "sourceUrl": "https://github.com/YuKongA/ghostlock-app",
-          "vendor": "nubia",
-          "brand": "红魔"
-        },
-        {
-          "name": "Red Magic Tablet 3 Pro",
-          "kernel": "6.6.30-android15-8-g54dcbfbef792-ab12368803-4k",
-          "so": "so/ghostlock.so?v=8",
-          "spawn": true,
-          "source": "YuKongA/ghostlock-app",
-          "sourceUrl": "https://github.com/YuKongA/ghostlock-app",
-          "vendor": "nubia",
-          "brand": "红魔"
-        }
-      ]
+     "name": "Xiaomi 17 / 17 Pro / 17 Pro Max / 17 Ultra  ✅实测",
+     "kernel": "6.12.23-android16-5-g75e9b1c7ae7c-abogki463945075-4k",
+     "so": "so/ghostlock.so?v=9",
+     "spawn": true,
+     "source": "YuKongA/ghostlock-app",
+     "sourceUrl": "https://github.com/YuKongA/ghostlock-app",
+     "verified": true,
+     "vendor": "xiaomi",
+     "brand": "小米"
     },
     {
-      "id": "ionstack",
-      "name": "IonStack 方案（su daemon 裸 root）",
-      "desc": "NebuSec IonStack，physrw 物理读写 + 内嵌 su daemon，无授权管理",
-      "devices": [
-        {
-          "name": "Redmi K80 Ultra (OS2)",
-          "kernel": "6.6（含 KernelSU，OS2 版本）",
-          "so": "so/redmi_k80ultra_os2.so",
-          "source": "hexo141/Rootme（搬运 NebuSec/CyberMeowfia）",
-          "sourceUrl": "https://github.com/hexo141/Rootme",
-          "vendor": "xiaomi",
-          "brand": "红米"
-        },
-        {
-          "name": "Redmi K80 Ultra (OS3)",
-          "kernel": "6.6（含 KernelSU，OS3 版本）",
-          "so": "so/redmi_k80ultra_os3.so",
-          "source": "hexo141/Rootme（搬运 NebuSec/CyberMeowfia）",
-          "sourceUrl": "https://github.com/hexo141/Rootme",
-          "vendor": "xiaomi",
-          "brand": "红米"
-        },
-        {
-          "name": "Redmi K40 系 (SM8250)",
-          "kernel": "4.19.157，骁龙870，Android 13",
-          "so": "so/redmi_k40_4.19.so",
-          "source": "hexo141/Rootme（搬运 NebuSec/CyberMeowfia）",
-          "sourceUrl": "https://github.com/hexo141/Rootme",
-          "vendor": "xiaomi",
-          "brand": "红米"
-        },
-        {
-          "name": "OPPO Find X8",
-          "kernel": "ColorOS 16（6.6，原仓库未标注完整 uname）",
-          "so": "so/oppo_findx8.so",
-          "source": "hexo141/Rootme（搬运 NebuSec/CyberMeowfia）",
-          "sourceUrl": "https://github.com/hexo141/Rootme",
-          "vendor": "oppo",
-          "brand": "OPPO"
-        },
-        {
-          "name": "OPPO PCKM00 (OP4A57)",
-          "kernel": "4.14.180，骁龙6150，Android 11",
-          "so": "so/oppo_pckm00.so",
-          "source": "hexo141/Rootme（搬运 NebuSec/CyberMeowfia）",
-          "sourceUrl": "https://github.com/hexo141/Rootme",
-          "vendor": "oppo",
-          "brand": "OPPO"
-        },
-        {
-          "name": "Realme RMX5200",
-          "kernel": "未标注（原仓库未提供内核版本）",
-          "so": "so/realme_rmx5200.so",
-          "source": "hexo141/Rootme（搬运 NebuSec/CyberMeowfia）",
-          "sourceUrl": "https://github.com/hexo141/Rootme",
-          "vendor": "oppo",
-          "brand": "realme"
-        },
-        {
-          "name": "iQOO Neo11 Plus (PD2520)",
-          "kernel": "GKI 6.6，骁龙8 Elite，Android 16",
-          "so": "so/neo11plus.so",
-          "source": "hexo141/Rootme（搬运 NebuSec/CyberMeowfia）",
-          "sourceUrl": "https://github.com/hexo141/Rootme",
-          "vendor": "vivo",
-          "brand": "iQOO"
-        },
-        {
-          "name": "iQOO Neo11",
-          "kernel": "未标注（原仓库未提供内核版本）",
-          "so": "so/iqoo_neo11.so",
-          "source": "hexo141/Rootme（搬运 NebuSec/CyberMeowfia）",
-          "sourceUrl": "https://github.com/hexo141/Rootme",
-          "vendor": "vivo",
-          "brand": "iQOO"
-        },
-        {
-          "name": "作业帮学习机 T20Pro+",
-          "kernel": "5.2.0",
-          "so": "so/zuoyebang.so",
-          "source": "hexo141/Rootme（搬运 NebuSec/CyberMeowfia）",
-          "sourceUrl": "https://github.com/hexo141/Rootme",
-          "vendor": "other",
-          "brand": "作业帮"
-        },
-        {
-          "name": "通用核心 (arm)",
-          "kernel": "纯 exploit，无 su",
-          "so": "so/arm.so",
-          "source": "hexo141/Rootme（搬运 NebuSec/CyberMeowfia）",
-          "sourceUrl": "https://github.com/hexo141/Rootme",
-          "vendor": "other",
-          "brand": "通用"
-        }
-      ]
+     "name": "Xiaomi 17T (b01b)",
+     "kernel": "6.6.102-android15-8-gb01b41c2647c-ab15574720-4k",
+     "so": "so/ghostlock.so?v=9",
+     "spawn": true,
+     "source": "YuKongA/ghostlock-app",
+     "sourceUrl": "https://github.com/YuKongA/ghostlock-app",
+     "vendor": "xiaomi",
+     "brand": "小米"
+    },
+    {
+     "name": "Xiaomi 17T (fe76)",
+     "kernel": "6.6.102-android15-8-gfe76d1bc97fd-ab14689815-4k",
+     "so": "so/ghostlock.so?v=9",
+     "spawn": true,
+     "source": "YuKongA/ghostlock-app",
+     "sourceUrl": "https://github.com/YuKongA/ghostlock-app",
+     "vendor": "xiaomi",
+     "brand": "小米"
+    },
+    {
+     "name": "Xiaomi Civi 5 Pro / K90 / POCO F7",
+     "kernel": "6.6.77-android15-8-g4a507830d890-ab13636293-4k",
+     "so": "so/ghostlock.so?v=9",
+     "spawn": true,
+     "source": "YuKongA/ghostlock-app",
+     "sourceUrl": "https://github.com/YuKongA/ghostlock-app",
+     "vendor": "xiaomi",
+     "brand": "小米"
+    },
+    {
+     "name": "Xiaomi 15",
+     "kernel": "6.6.77-android15-8-g63ce7556864c-ab13994517-4k",
+     "so": "so/ghostlock.so?v=9",
+     "spawn": true,
+     "source": "YuKongA/ghostlock-app",
+     "sourceUrl": "https://github.com/YuKongA/ghostlock-app",
+     "vendor": "xiaomi",
+     "brand": "小米"
+    },
+    {
+     "name": "Xiaomi 15 Pro / K80 Pro / K80 Ultra",
+     "kernel": "6.6.77-android15-8-gca30f3b4bef6-abogki440974771-4k",
+     "so": "so/ghostlock.so?v=9",
+     "spawn": true,
+     "source": "YuKongA/ghostlock-app",
+     "sourceUrl": "https://github.com/YuKongA/ghostlock-app",
+     "vendor": "xiaomi",
+     "brand": "小米"
+    },
+    {
+     "name": "小米 14 (beryl)",
+     "kernel": "6.6 系列（预编译，机型专用）",
+     "so": "so/woshi_beryl.so",
+     "source": "woshimaniubi8/CVE-2026-43499-root-KernelSU",
+     "sourceUrl": "https://github.com/woshimaniubi8/CVE-2026-43499-root-KernelSU",
+     "vendor": "xiaomi",
+     "brand": "小米"
+    },
+    {
+     "name": "REDMI Note 15 4G / POCO M6 Pro 4G",
+     "kernel": "6.12.30-android16-5-g6e872b4863d6-ab13847919-4k",
+     "so": "so/ghostlock.so?v=9",
+     "spawn": true,
+     "source": "YuKongA/ghostlock-app",
+     "sourceUrl": "https://github.com/YuKongA/ghostlock-app",
+     "vendor": "xiaomi",
+     "brand": "红米"
+    },
+    {
+     "name": "REDMI K90 Pro Max",
+     "kernel": "6.12.23-android16-5-g16e473de48a3-abogki462654244-4k",
+     "so": "so/ghostlock.so?v=9",
+     "spawn": true,
+     "source": "YuKongA/ghostlock-app",
+     "sourceUrl": "https://github.com/YuKongA/ghostlock-app",
+     "vendor": "xiaomi",
+     "brand": "红米"
+    },
+    {
+     "name": "REDMI K90 Ultra (608a)",
+     "kernel": "6.6.118-android15-8-g608a629fedf7-ab15154340-4k",
+     "so": "so/ghostlock.so?v=9",
+     "spawn": true,
+     "source": "YuKongA/ghostlock-app",
+     "sourceUrl": "https://github.com/YuKongA/ghostlock-app",
+     "vendor": "xiaomi",
+     "brand": "红米"
+    },
+    {
+     "name": "REDMI K80 Pro / Turbo 5 Max / POCO X8 Pro Max / Pad 7 Ultra",
+     "kernel": "6.6.118-android15-8-gc44b714366cc-abogki519650608-4k",
+     "so": "so/ghostlock.so?v=9",
+     "spawn": true,
+     "source": "YuKongA/ghostlock-app",
+     "sourceUrl": "https://github.com/YuKongA/ghostlock-app",
+     "vendor": "xiaomi",
+     "brand": "红米"
+    },
+    {
+     "name": "REDMI K90 Ultra / POCO F7",
+     "kernel": "6.6.118-android15-8-ge56cf6b09cca-ab15511674-4k",
+     "so": "so/ghostlock.so?v=9",
+     "spawn": true,
+     "source": "YuKongA/ghostlock-app",
+     "sourceUrl": "https://github.com/YuKongA/ghostlock-app",
+     "vendor": "xiaomi",
+     "brand": "红米"
+    },
+    {
+     "name": "Redmi K70 / K80 Pro (rodin)",
+     "kernel": "6.6 系列（预编译，机型专用）",
+     "so": "so/woshi_rodin.so",
+     "source": "woshimaniubi8/CVE-2026-43499-root-KernelSU",
+     "sourceUrl": "https://github.com/woshimaniubi8/CVE-2026-43499-root-KernelSU",
+     "vendor": "xiaomi",
+     "brand": "红米"
+    },
+    {
+     "name": "Redmi K60（澎湃 OS3）",
+     "kernel": "5.10.160-gki-ge2aba97d850c",
+     "so": "so/ghostlock.so?v=9",
+     "spawn": true,
+     "source": "YuKongA/ghostlock-app",
+     "sourceUrl": "https://github.com/YuKongA/ghostlock-app",
+     "vendor": "xiaomi",
+     "brand": "红米"
+    },
+    {
+     "name": "POCO X8 Pro Max",
+     "kernel": "6.6.89-android15-8-g0889fe95bb10-ab14402178-4k",
+     "so": "so/ghostlock.so?v=9",
+     "spawn": true,
+     "source": "YuKongA/ghostlock-app",
+     "sourceUrl": "https://github.com/YuKongA/ghostlock-app",
+     "vendor": "xiaomi",
+     "brand": "POCO"
+    },
+    {
+     "name": "OPPO Find X9 / X9 Pro",
+     "kernel": "6.12.23-android16-5-g82efd98459a2-ab14457512-4k",
+     "so": "so/ghostlock.so?v=9",
+     "spawn": true,
+     "source": "YuKongA/ghostlock-app",
+     "sourceUrl": "https://github.com/YuKongA/ghostlock-app",
+     "vendor": "oppo",
+     "brand": "OPPO"
+    },
+    {
+     "name": "OPPO Find N5",
+     "kernel": "6.6.118-android15-8-g2e6b9c3812c5-ab15114928-4k",
+     "so": "so/ghostlock.so?v=9",
+     "spawn": true,
+     "source": "YuKongA/ghostlock-app",
+     "sourceUrl": "https://github.com/YuKongA/ghostlock-app",
+     "vendor": "oppo",
+     "brand": "OPPO"
+    },
+    {
+     "name": "OPPO Find X8 Ultra / OnePlus 13 / ACE 5 Pro",
+     "kernel": "6.6.118-android15-8-g93e223c276e7-abogki500782043-4k",
+     "so": "so/ghostlock.so?v=9",
+     "spawn": true,
+     "source": "YuKongA/ghostlock-app",
+     "sourceUrl": "https://github.com/YuKongA/ghostlock-app",
+     "vendor": "oppo",
+     "brand": "OPPO"
+    },
+    {
+     "name": "OPPO Pad 5 / OnePlus Pad 2",
+     "kernel": "6.6.118-android15-8-ge58033dc8ea6-abogki498046332-4k",
+     "so": "so/ghostlock.so?v=9",
+     "spawn": true,
+     "source": "YuKongA/ghostlock-app",
+     "sourceUrl": "https://github.com/YuKongA/ghostlock-app",
+     "vendor": "oppo",
+     "brand": "OPPO"
+    },
+    {
+     "name": "OPPO Find X8 / X8 Pro",
+     "kernel": "6.6.118-android15-8-gebdfad32d749-ab15099304-4k",
+     "so": "so/ghostlock.so?v=9",
+     "spawn": true,
+     "source": "YuKongA/ghostlock-app",
+     "sourceUrl": "https://github.com/YuKongA/ghostlock-app",
+     "vendor": "oppo",
+     "brand": "OPPO"
+    },
+    {
+     "name": "OPPO Pad 4 Pro",
+     "kernel": "6.6.89-android15-8-g096cdb6ecefc-ab14358676-4k",
+     "so": "so/ghostlock.so?v=9",
+     "spawn": true,
+     "source": "YuKongA/ghostlock-app",
+     "sourceUrl": "https://github.com/YuKongA/ghostlock-app",
+     "vendor": "oppo",
+     "brand": "OPPO"
+    },
+    {
+     "name": "OnePlus 15T",
+     "kernel": "6.12.38-android16-5-g844001fb8721-ab14552068-4k",
+     "so": "so/ghostlock.so?v=9",
+     "spawn": true,
+     "source": "YuKongA/ghostlock-app",
+     "sourceUrl": "https://github.com/YuKongA/ghostlock-app",
+     "vendor": "oppo",
+     "brand": "一加"
+    },
+    {
+     "name": "OnePlus 15 (a8f88)",
+     "kernel": "6.12.23-android16-5-ga8f88ad96df3-ab13929693-4k",
+     "so": "so/ghostlock.so?v=9",
+     "spawn": true,
+     "source": "YuKongA/ghostlock-app",
+     "sourceUrl": "https://github.com/YuKongA/ghostlock-app",
+     "vendor": "oppo",
+     "brand": "一加"
+    },
+    {
+     "name": "OnePlus 15 (b2a87)",
+     "kernel": "6.12.23-android16-5-gb2a876903b49-ab14541642-4k",
+     "so": "so/ghostlock.so?v=9",
+     "spawn": true,
+     "source": "YuKongA/ghostlock-app",
+     "sourceUrl": "https://github.com/YuKongA/ghostlock-app",
+     "vendor": "oppo",
+     "brand": "一加"
+    },
+    {
+     "name": "OnePlus 13",
+     "kernel": "6.6.89-android15-8-gf4dc45704e54-abogki446052083-4k",
+     "so": "so/ghostlock.so?v=9",
+     "spawn": true,
+     "source": "YuKongA/ghostlock-app",
+     "sourceUrl": "https://github.com/YuKongA/ghostlock-app",
+     "vendor": "oppo",
+     "brand": "一加"
+    },
+    {
+     "name": "Red Magic 11 Pro / Tablet 5 Pro",
+     "kernel": "6.12.23-android16-5-gf1bdb13583da-ab13761046-4k",
+     "so": "so/ghostlock.so?v=9",
+     "spawn": true,
+     "source": "YuKongA/ghostlock-app",
+     "sourceUrl": "https://github.com/YuKongA/ghostlock-app",
+     "vendor": "nubia",
+     "brand": "红魔"
+    },
+    {
+     "name": "Red Magic 10 Pro / 11 Air / Tablet 3 Pro",
+     "kernel": "6.6.92-android15-8-g3637f4904cf5-ab13944661-4k",
+     "so": "so/ghostlock.so?v=9",
+     "spawn": true,
+     "source": "YuKongA/ghostlock-app",
+     "sourceUrl": "https://github.com/YuKongA/ghostlock-app",
+     "vendor": "nubia",
+     "brand": "红魔"
+    },
+    {
+     "name": "Red Magic Tablet 3 Pro",
+     "kernel": "6.6.30-android15-8-g54dcbfbef792-ab12368803-4k",
+     "so": "so/ghostlock.so?v=9",
+     "spawn": true,
+     "source": "YuKongA/ghostlock-app",
+     "sourceUrl": "https://github.com/YuKongA/ghostlock-app",
+     "vendor": "nubia",
+     "brand": "红魔"
     }
-  ]
+   ]
+  },
+  {
+   "id": "ionstack",
+   "name": "IonStack 方案（su daemon 裸 root）",
+   "desc": "NebuSec IonStack，physrw 物理读写 + 内嵌 su daemon，无授权管理",
+   "devices": [
+    {
+     "name": "Redmi K80 Ultra (OS2)",
+     "kernel": "6.6（含 KernelSU，OS2 版本）",
+     "so": "so/redmi_k80ultra_os2.so",
+     "source": "hexo141/Rootme（搬运 NebuSec/CyberMeowfia）",
+     "sourceUrl": "https://github.com/hexo141/Rootme",
+     "vendor": "xiaomi",
+     "brand": "红米"
+    },
+    {
+     "name": "Redmi K80 Ultra (OS3)",
+     "kernel": "6.6（含 KernelSU，OS3 版本）",
+     "so": "so/redmi_k80ultra_os3.so",
+     "source": "hexo141/Rootme（搬运 NebuSec/CyberMeowfia）",
+     "sourceUrl": "https://github.com/hexo141/Rootme",
+     "vendor": "xiaomi",
+     "brand": "红米"
+    },
+    {
+     "name": "Redmi K40 系 (SM8250)",
+     "kernel": "4.19.157，骁龙870，Android 13",
+     "so": "so/redmi_k40_4.19.so",
+     "source": "hexo141/Rootme（搬运 NebuSec/CyberMeowfia）",
+     "sourceUrl": "https://github.com/hexo141/Rootme",
+     "vendor": "xiaomi",
+     "brand": "红米"
+    },
+    {
+     "name": "OPPO Find X8",
+     "kernel": "ColorOS 16（6.6，原仓库未标注完整 uname）",
+     "so": "so/oppo_findx8.so",
+     "source": "hexo141/Rootme（搬运 NebuSec/CyberMeowfia）",
+     "sourceUrl": "https://github.com/hexo141/Rootme",
+     "vendor": "oppo",
+     "brand": "OPPO"
+    },
+    {
+     "name": "OPPO PCKM00 (OP4A57)",
+     "kernel": "4.14.180，骁龙6150，Android 11",
+     "so": "so/oppo_pckm00.so",
+     "source": "hexo141/Rootme（搬运 NebuSec/CyberMeowfia）",
+     "sourceUrl": "https://github.com/hexo141/Rootme",
+     "vendor": "oppo",
+     "brand": "OPPO"
+    },
+    {
+     "name": "Realme RMX5200",
+     "kernel": "未标注（原仓库未提供内核版本）",
+     "so": "so/realme_rmx5200.so",
+     "source": "hexo141/Rootme（搬运 NebuSec/CyberMeowfia）",
+     "sourceUrl": "https://github.com/hexo141/Rootme",
+     "vendor": "oppo",
+     "brand": "realme"
+    },
+    {
+     "name": "iQOO Neo11 Plus (PD2520)",
+     "kernel": "GKI 6.6，骁龙8 Elite，Android 16",
+     "so": "so/neo11plus.so",
+     "source": "hexo141/Rootme（搬运 NebuSec/CyberMeowfia）",
+     "sourceUrl": "https://github.com/hexo141/Rootme",
+     "vendor": "vivo",
+     "brand": "iQOO"
+    },
+    {
+     "name": "iQOO Neo11",
+     "kernel": "未标注（原仓库未提供内核版本）",
+     "so": "so/iqoo_neo11.so",
+     "source": "hexo141/Rootme（搬运 NebuSec/CyberMeowfia）",
+     "sourceUrl": "https://github.com/hexo141/Rootme",
+     "vendor": "vivo",
+     "brand": "iQOO"
+    },
+    {
+     "name": "作业帮学习机 T20Pro+",
+     "kernel": "5.2.0",
+     "so": "so/zuoyebang.so",
+     "source": "hexo141/Rootme（搬运 NebuSec/CyberMeowfia）",
+     "sourceUrl": "https://github.com/hexo141/Rootme",
+     "vendor": "other",
+     "brand": "作业帮"
+    },
+    {
+     "name": "通用核心 (arm)",
+     "kernel": "纯 exploit，无 su",
+     "so": "so/arm.so",
+     "source": "hexo141/Rootme（搬运 NebuSec/CyberMeowfia）",
+     "sourceUrl": "https://github.com/hexo141/Rootme",
+     "vendor": "other",
+     "brand": "通用"
+    }
+   ]
+  }
+ ]
 }
