@@ -1,5 +1,5 @@
 {
- "version": 7,
+ "version": 8,
  "note": "自用设备列表；分组显示，GhostLock 组优先",
  "groups": [
   {
@@ -10,7 +10,7 @@
     {
      "name": "Xiaomi 17 / 17 Pro / 17 Pro Max / 17 Ultra  ✅实测",
      "kernel": "6.12.23-android16-5-g75e9b1c7ae7c-abogki463945075-4k",
-     "so": "so/ghostlock.so?v=10",
+     "so": "so/ghostlock.so?v=11",
      "spawn": true,
      "source": "YuKongA/ghostlock-app",
      "sourceUrl": "https://github.com/YuKongA/ghostlock-app",
@@ -21,7 +21,7 @@
     {
      "name": "Xiaomi 17T (b01b)",
      "kernel": "6.6.102-android15-8-gb01b41c2647c-ab15574720-4k",
-     "so": "so/ghostlock.so?v=10",
+     "so": "so/ghostlock.so?v=11",
      "spawn": true,
      "source": "YuKongA/ghostlock-app",
      "sourceUrl": "https://github.com/YuKongA/ghostlock-app",
@@ -31,7 +31,7 @@
     {
      "name": "Xiaomi 17T (fe76)",
      "kernel": "6.6.102-android15-8-gfe76d1bc97fd-ab14689815-4k",
-     "so": "so/ghostlock.so?v=10",
+     "so": "so/ghostlock.so?v=11",
      "spawn": true,
      "source": "YuKongA/ghostlock-app",
      "sourceUrl": "https://github.com/YuKongA/ghostlock-app",
@@ -41,7 +41,7 @@
     {
      "name": "Xiaomi Civi 5 Pro / K90 / POCO F7",
      "kernel": "6.6.77-android15-8-g4a507830d890-ab13636293-4k",
-     "so": "so/ghostlock.so?v=10",
+     "so": "so/ghostlock.so?v=11",
      "spawn": true,
      "source": "YuKongA/ghostlock-app",
      "sourceUrl": "https://github.com/YuKongA/ghostlock-app",
@@ -51,7 +51,7 @@
     {
      "name": "Xiaomi 15",
      "kernel": "6.6.77-android15-8-g63ce7556864c-ab13994517-4k",
-     "so": "so/ghostlock.so?v=10",
+     "so": "so/ghostlock.so?v=11",
      "spawn": true,
      "source": "YuKongA/ghostlock-app",
      "sourceUrl": "https://github.com/YuKongA/ghostlock-app",
@@ -61,7 +61,7 @@
     {
      "name": "Xiaomi 15 Pro / K80 Pro / K80 Ultra",
      "kernel": "6.6.77-android15-8-gca30f3b4bef6-abogki440974771-4k",
-     "so": "so/ghostlock.so?v=10",
+     "so": "so/ghostlock.so?v=11",
      "spawn": true,
      "source": "YuKongA/ghostlock-app",
      "sourceUrl": "https://github.com/YuKongA/ghostlock-app",
@@ -80,7 +80,7 @@
     {
      "name": "REDMI Note 15 4G / POCO M6 Pro 4G",
      "kernel": "6.12.30-android16-5-g6e872b4863d6-ab13847919-4k",
-     "so": "so/ghostlock.so?v=10",
+     "so": "so/ghostlock.so?v=11",
      "spawn": true,
      "source": "YuKongA/ghostlock-app",
      "sourceUrl": "https://github.com/YuKongA/ghostlock-app",
@@ -90,7 +90,7 @@
     {
      "name": "REDMI K90 Pro Max",
      "kernel": "6.12.23-android16-5-g16e473de48a3-abogki462654244-4k",
-     "so": "so/ghostlock.so?v=10",
+     "so": "so/ghostlock.so?v=11",
      "spawn": true,
      "source": "YuKongA/ghostlock-app",
      "sourceUrl": "https://github.com/YuKongA/ghostlock-app",
@@ -100,7 +100,7 @@
     {
      "name": "REDMI K90 Ultra (608a)",
      "kernel": "6.6.118-android15-8-g608a629fedf7-ab15154340-4k",
-     "so": "so/ghostlock.so?v=10",
+     "so": "so/ghostlock.so?v=11",
      "spawn": true,
      "source": "YuKongA/ghostlock-app",
      "sourceUrl": "https://github.com/YuKongA/ghostlock-app",
@@ -110,7 +110,7 @@
     {
      "name": "REDMI K80 Pro / Turbo 5 Max / POCO X8 Pro Max / Pad 7 Ultra",
      "kernel": "6.6.118-android15-8-gc44b714366cc-abogki519650608-4k",
-     "so": "so/ghostlock.so?v=10",
+     "so": "so/ghostlock.so?v=11",
      "spawn": true,
      "source": "YuKongA/ghostlock-app",
      "sourceUrl": "https://github.com/YuKongA/ghostlock-app",
@@ -120,7 +120,7 @@
     {
      "name": "REDMI K90 Ultra / POCO F7",
      "kernel": "6.6.118-android15-8-ge56cf6b09cca-ab15511674-4k",
-     "so": "so/ghostlock.so?v=10",
+     "so": "so/ghostlock.so?v=11",
      "spawn": true,
      "source": "YuKongA/ghostlock-app",
      "sourceUrl": "https://github.com/YuKongA/ghostlock-app",
@@ -138,8 +138,8 @@
     },
     {
      "name": "Redmi K60（澎湃 OS3）",
-     "kernel": "5.10.160-gki-ge2aba97d850c",
-     "so": "so/ghostlock.so?v=10",
+     "kernel": "5.10.236-android12-9-00003-gfb24cf99ad97-ab14313284",
+     "so": "so/ghostlock.so?v=11",
      "spawn": true,
      "source": "YuKongA/ghostlock-app",
      "sourceUrl": "https://github.com/YuKongA/ghostlock-app",
@@ -149,7 +149,7 @@
     {
      "name": "POCO X8 Pro Max",
      "kernel": "6.6.89-android15-8-g0889fe95bb10-ab14402178-4k",
-     "so": "so/ghostlock.so?v=10",
+     "so": "so/ghostlock.so?v=11",
      "spawn": true,
      "source": "YuKongA/ghostlock-app",
      "sourceUrl": "https://github.com/YuKongA/ghostlock-app",
@@ -159,7 +159,7 @@
     {
      "name": "OPPO Find X9 / X9 Pro",
      "kernel": "6.12.23-android16-5-g82efd98459a2-ab14457512-4k",
-     "so": "so/ghostlock.so?v=10",
+     "so": "so/ghostlock.so?v=11",
      "spawn": true,
      "source": "YuKongA/ghostlock-app",
      "sourceUrl": "https://github.com/YuKongA/ghostlock-app",
@@ -169,7 +169,7 @@
     {
      "name": "OPPO Find N5",
      "kernel": "6.6.118-android15-8-g2e6b9c3812c5-ab15114928-4k",
-     "so": "so/ghostlock.so?v=10",
+     "so": "so/ghostlock.so?v=11",
      "spawn": true,
      "source": "YuKongA/ghostlock-app",
      "sourceUrl": "https://github.com/YuKongA/ghostlock-app",
@@ -179,7 +179,7 @@
     {
      "name": "OPPO Find X8 Ultra / OnePlus 13 / ACE 5 Pro",
      "kernel": "6.6.118-android15-8-g93e223c276e7-abogki500782043-4k",
-     "so": "so/ghostlock.so?v=10",
+     "so": "so/ghostlock.so?v=11",
      "spawn": true,
      "source": "YuKongA/ghostlock-app",
      "sourceUrl": "https://github.com/YuKongA/ghostlock-app",
@@ -189,7 +189,7 @@
     {
      "name": "OPPO Pad 5 / OnePlus Pad 2",
      "kernel": "6.6.118-android15-8-ge58033dc8ea6-abogki498046332-4k",
-     "so": "so/ghostlock.so?v=10",
+     "so": "so/ghostlock.so?v=11",
      "spawn": true,
      "source": "YuKongA/ghostlock-app",
      "sourceUrl": "https://github.com/YuKongA/ghostlock-app",
@@ -199,7 +199,7 @@
     {
      "name": "OPPO Find X8 / X8 Pro",
      "kernel": "6.6.118-android15-8-gebdfad32d749-ab15099304-4k",
-     "so": "so/ghostlock.so?v=10",
+     "so": "so/ghostlock.so?v=11",
      "spawn": true,
      "source": "YuKongA/ghostlock-app",
      "sourceUrl": "https://github.com/YuKongA/ghostlock-app",
@@ -209,7 +209,7 @@
     {
      "name": "OPPO Pad 4 Pro",
      "kernel": "6.6.89-android15-8-g096cdb6ecefc-ab14358676-4k",
-     "so": "so/ghostlock.so?v=10",
+     "so": "so/ghostlock.so?v=11",
      "spawn": true,
      "source": "YuKongA/ghostlock-app",
      "sourceUrl": "https://github.com/YuKongA/ghostlock-app",
@@ -219,7 +219,7 @@
     {
      "name": "OnePlus 15T",
      "kernel": "6.12.38-android16-5-g844001fb8721-ab14552068-4k",
-     "so": "so/ghostlock.so?v=10",
+     "so": "so/ghostlock.so?v=11",
      "spawn": true,
      "source": "YuKongA/ghostlock-app",
      "sourceUrl": "https://github.com/YuKongA/ghostlock-app",
@@ -229,7 +229,7 @@
     {
      "name": "OnePlus 15 (a8f88)",
      "kernel": "6.12.23-android16-5-ga8f88ad96df3-ab13929693-4k",
-     "so": "so/ghostlock.so?v=10",
+     "so": "so/ghostlock.so?v=11",
      "spawn": true,
      "source": "YuKongA/ghostlock-app",
      "sourceUrl": "https://github.com/YuKongA/ghostlock-app",
@@ -239,7 +239,7 @@
     {
      "name": "OnePlus 15 (b2a87)",
      "kernel": "6.12.23-android16-5-gb2a876903b49-ab14541642-4k",
-     "so": "so/ghostlock.so?v=10",
+     "so": "so/ghostlock.so?v=11",
      "spawn": true,
      "source": "YuKongA/ghostlock-app",
      "sourceUrl": "https://github.com/YuKongA/ghostlock-app",
@@ -249,7 +249,7 @@
     {
      "name": "OnePlus 13",
      "kernel": "6.6.89-android15-8-gf4dc45704e54-abogki446052083-4k",
-     "so": "so/ghostlock.so?v=10",
+     "so": "so/ghostlock.so?v=11",
      "spawn": true,
      "source": "YuKongA/ghostlock-app",
      "sourceUrl": "https://github.com/YuKongA/ghostlock-app",
@@ -259,7 +259,7 @@
     {
      "name": "Red Magic 11 Pro / Tablet 5 Pro",
      "kernel": "6.12.23-android16-5-gf1bdb13583da-ab13761046-4k",
-     "so": "so/ghostlock.so?v=10",
+     "so": "so/ghostlock.so?v=11",
      "spawn": true,
      "source": "YuKongA/ghostlock-app",
      "sourceUrl": "https://github.com/YuKongA/ghostlock-app",
@@ -269,7 +269,7 @@
     {
      "name": "Red Magic 10 Pro / 11 Air / Tablet 3 Pro",
      "kernel": "6.6.92-android15-8-g3637f4904cf5-ab13944661-4k",
-     "so": "so/ghostlock.so?v=10",
+     "so": "so/ghostlock.so?v=11",
      "spawn": true,
      "source": "YuKongA/ghostlock-app",
      "sourceUrl": "https://github.com/YuKongA/ghostlock-app",
@@ -279,7 +279,7 @@
     {
      "name": "Red Magic Tablet 3 Pro",
      "kernel": "6.6.30-android15-8-g54dcbfbef792-ab12368803-4k",
-     "so": "so/ghostlock.so?v=10",
+     "so": "so/ghostlock.so?v=11",
      "spawn": true,
      "source": "YuKongA/ghostlock-app",
      "sourceUrl": "https://github.com/YuKongA/ghostlock-app",
