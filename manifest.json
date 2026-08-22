@@ -1,5 +1,5 @@
 {
- "version": 8,
+ "version": 9,
  "note": "自用设备列表；分组显示，GhostLock 组优先",
  "groups": [
   {
@@ -133,16 +133,6 @@
      "so": "so/woshi_rodin.so",
      "source": "woshimaniubi8/CVE-2026-43499-root-KernelSU",
      "sourceUrl": "https://github.com/woshimaniubi8/CVE-2026-43499-root-KernelSU",
-     "vendor": "xiaomi",
-     "brand": "红米"
-    },
-    {
-     "name": "Redmi K60（澎湃 OS3）",
-     "kernel": "5.10.236-android12-9-00003-gfb24cf99ad97-ab14313284",
-     "so": "so/ghostlock.so?v=11",
-     "spawn": true,
-     "source": "YuKongA/ghostlock-app",
-     "sourceUrl": "https://github.com/YuKongA/ghostlock-app",
      "vendor": "xiaomi",
      "brand": "红米"
     },

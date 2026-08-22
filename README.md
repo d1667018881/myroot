@@ -143,7 +143,6 @@ ghostlock.so **内置 22 个内核偏移表**，运行时按 `uname -r` 自动�
 - REDMI K80 Pro / Turbo 5 Max / POCO X8 Pro Max / Pad 7 Ultra — `6.6.118-android15-8-gc44b714366cc-abogki519650608-4k`
 - REDMI K90 Ultra / POCO F7 — `6.6.118-android15-8-ge56cf6b09cca-ab15511674-4k`
 - Redmi K70 / K80 Pro (rodin) — `6.6 系列（预编译，机型专用）`
-- Redmi K60（澎湃 OS3）— `5.10.160-gki-ge2aba97d850c`（首个 5.10 条目，待实测）
 **POCO**
 
 - POCO X8 Pro Max — `6.6.89-android15-8-g0889fe95bb10-ab14402178-4k`
@@ -311,15 +310,19 @@ llvm-readelf -x .init_array xxx.so   # 应有指向用户 constructor 的指针
 
 ## 偏移提取教程（直接用原仓库方法）
 
-**特殊场景：GKI 老内核（5.10 无 BTF）怎么拿偏移**（如 K60，cve-2026-43499 可行性的关键）：
+**特殊场景：GKI 老内核（5.10 无 BTF）怎么拿偏移**（如 K60）：
 
 ```
-K60 内核 = 5.10.160-gki-ge2aba97d850c（GKI！）
-futex 入口 untrusted_app 可达 ✅ + 漏洞通杀 ✅
-唯一障碍: K60 boot.img 无 BTF → 结构体偏移算不出
+⚠️ 结论（2026-08 已实测确认）：CVE-2026-43499 ghostlock 的 W1 原语与 5.10 栈布局不兼容——
+   pselect fd_set 与 futex waiter 栈相对 delta=-32（6.x 要求 delta>=0），
+   偏移全对也会 panic 重启（实测两次）。5.10 设备勿走 ghostlock 网页方案。
+   推导依据：反汇编 K60 boot.img 五个函数（__arm64_sys_pselect6/core_sys_select/
+   __arm64_sys_futex/do_futex/futex_wait_requeue_pi）+ kallsyms 恢复（142761 符号）+
+   设备 BTF（164773 类型）三重验证，偏移本身全对，死因是 W1 攻击原语。
 
-解法（GKI 源码/官方镜像公开，不依赖设备自身 BTF）:
-1. 确认内核是 GKI（uname 含 -gki-）
+偏移获取方法（供研究/其他利用链参考）:
+1. 确认内核是 GKI（uname 含 -gki- 或 android12-5.10 命名；K60 实测 =
+   5.10.236-android12-9-00003-gfb24cf99ad97-ab14313284）
 2. 找对应 GKI 分支的带 BTF vmlinux:
    a. ci.android.com: builds/branches/aosp_kernel-common-android12-5.10/status.json
       拿 kernel_aarch64 的 last_known_good_build id，再找 artifact 下载（页面 view 里找链接）
@@ -327,23 +330,21 @@ futex 入口 untrusted_app 可达 ✅ + 漏洞通杀 ✅
    c. android12-5.10 源码 + gki_defconfig 编译（慢但可靠）
 3. 用 extract_rs 处理带 BTF 的 vmlinux（boot.img）→ 生成完整 offsets.json
    （或 pahole -C task_struct vmlinux 直接看字段偏移）
-4. 生成 K60 offsets.json → 编译 ghostlock → 网页方案测试
+4. ⚠️ 设备 boot.img 无 BTF 时，extract_rs 会跳过 pselect 布局推导（需 BTF），
+   启发式 pselect_waiter_shift 不可信——布局可行性必须用 BTF 补齐推导验证，
+   不能只看偏移表能不能生成。
 
-✅ K60 已实测落地（2026-08）:
+✅ K60 研究过程记录（2026-08）:
    - 设备自带 BTF（root 提取 /sys/kernel/btf/vmlinux，164773 类型）解析确认:
      task_struct 关键偏移（prio/pi_lock/pi_waiters/pi_top_task/pi_blocked_on/
      pid/tgid/atomic_flags/real_cred/cred/comm/tasks/seccomp）与 6.12 **完全一致**
    - rt_mutex_waiter（tree=0x0/pi_tree=0x28/task=0x50）、cred（uid=0x8/
      security=0x80）、struct page（0x40/0x8/0x30）均与 target.h 默认一致
    - 符号偏移（init_task/init_cred/selinux_*/slide_*）由卡刷包 payload 的
-     kallsyms 恢复（extract_rs，142761 符号）
+     kallsyms 恢复（extract_rs，142761 符号），AxManager 写死地址交叉验证吻合
    - 适配项: kernel_phys_load=0x80000000（高通 GKI）、
-     kimage_text_base=0xffffffc008000000（K60 5.10 与 oplus 6.6 的
-     0xffffffc080000000 不同，已加运行时动态支持）
-   - 状态: 已编入网页 ghostlock.so（v9），待 K60 实机验证
-
-⚠️ 注意: 5.10 的 task_struct 布局与 6.6/6.12 不同，exploit 代码（pselect/futex 机制）
-可能需微调，不只是偏移表。已验证: 厂商 GKI 内核结构一般与官方一致（可先用官方偏移试）
+     kimage_text_base=0xffffffc008000000
+   - 最终判定: W1 原语不兼容 5.10（delta=-32），条目已下架
 ```
 
 新机型内核不在内置 25 表里时，用 YuKongA 原仓库的 `tools/extract_rs` 提取偏移：
