@@ -4,6 +4,8 @@
 免安装、纯网页、**重启即恢复**（临时 root，不修改系统分区、不留残留）。
 
 > 线上地址：https://d1667018881.github.io/myroot/
+>
+> **AI 交接文档（接手必读）** → [AI_HANDOFF.md](AI_HANDOFF.md)
 
 ## 方案概览
 
