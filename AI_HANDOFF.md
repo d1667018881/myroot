@@ -138,6 +138,7 @@ cp ghostlock ghostlock_vNN.so && $NDK/llvm-strip ghostlock_vNN.so
 
 - **定案**：① 构建形态（PIE/-shared）**不是**变量（08-19 shared ✅、?13 PIE 今天 ❌、C PIE ✅）；② 三字段 alias **不是**根因（A 回退后仍挂）；③ **W1 杀手窗口 = 08-17→09-16 的 core diff**（fork→09-10 的 949 行 + #127 + #138）；④ ?v=13 本身不稳（D 原字节今天挂），C 与 D 的 128B 差异（当年构建的定制重放内容 vs 我们的重放）是 C 成 D 败的直接原因——**待挖 P2**。
 - **v19（09-26 19:3x 部署，线上逐字节验证毕）**：主 `ghostlock.so?v=19`（80632B）= **C 的成功配方 + 09-23 全部 50 内核表**（09-16 core 1145ef2d + 10001ae1 kernels + LMK + constructor，PIE+strip）——新设备支持恢复、小米 17 全链配方固化。构建配方已 pin 进 `build-ghostlock.sh`（CORE_REF/KERNELS_REF），patch 重新生成。
+- **v20（09-26 20:2x 收尾）**：TA 真机复测 v19 确认**全链成功**（W2 数十秒完成；"日志短"= 成功得快，失败版才把 120s 超时跑满后 dump 尾部）。实验条目与实验 so（cal/a/b/c/d）已清（git 可回溯：v17=eae306b / v18=02d9602），manifest v20 = 52 设备。
 
 ### 7.2 蓝牙掉配对（已知机理，非 bug）
 提权时 SELinux enforcing↔permissive 反复横跳 + `load_policy` 热重载 → 蓝牙栈内存态丢失 link key → 连接需重新 SSP 配对。**新版不改善**，是临时 root 的固有代价。
@@ -175,7 +176,7 @@ CVE-2026-43499 的 pselect 路线在 5.10 不可行：pselect fd_set 与 futex w
 
 ## 10. 待办（TODO）
 
-1. **[P0]** v19 主条目复测确认（C 配方 + 50 表，预期与 C 一致全链成功）；确认后清掉实验条目（校准/A/B/C/D）
+1. ~~[P0]~~ **已完成**（v19/v20 真机确认全链成功，实验条目已清）
 2. **[P2]** C vs D 的 128B 差异挖矿：反汇编对比定位当年 ?v=13 构建与复刻的定制差异（spray 参数？constructor 形态？）——弄清"当年构建引入了什么坑"
 3. **[P2]** 09-16→09-23 core 的 W1 杀手精确定位（当年判 9e750039 已证伪）：二分 fork→09-10 的 949 行 diff（TCP route / W2W3 harden / kernelsnitch / retry 链）；定位后可考虑向上游提 issue 或把 09-16 core 的关键部分前向移植
 4. **[P1]** 6.1 compact 设备（TCP route）在 09-16 core 上回归验证——v19 用 09-16 core，若 Tensor/6.1 用户报障需评估
