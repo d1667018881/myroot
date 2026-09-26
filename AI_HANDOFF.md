@@ -124,8 +124,9 @@ cp ghostlock ghostlock_vNN.so && $NDK/llvm-strip ghostlock_vNN.so
 
 - **W1 回归根因（已锤定）**：上游 `9e750039`（09-17，"Add Pixel 9 Pro"）把 `util.c` payload 三个字段 `waiter_task`/`task_group`/`pi_top_task` 从 **image 视图**（`INIT_TASK`=`ffffffc0…`）改成 **direct-map alias 视图**（`SLIDE_INIT_TASK`=`ffffff80…`），注释声称 "aliases are dereferenceable on every SoC"。**该论断对 QCOM 6.12 非 compact pselect 路线不成立**——alias 地址本身可写（W1 target 一直是 alias 形式），但 PI 链上 planted task 指针与内核自持的 image 形式指针做身份比较时分叉，erase 写入不再落到 target（`success=1` 只是 consumer 的 sched_setattr 成功，不是写入验证）。v13→v14 之间这是**唯一**碰 `src/core` 的提交（逐 commit 核对过文件列表）。
 - **W2 回归（根因仍未定，#127 嫌疑已撤）**：09-16 时代归咎 #127 是**错的**——#127 只改 compact 字表（`relink_pc` 那组），小米 17 走非 compact；非 compact 的 W0 payload 布局、W1/W2 调用参数（mode/leaf）、写入字表在 fork(08-17)→09-16 之间**文本上完全没变**。真正的回归窗口是 **fork→09-10 的 949 行大 diff**（TCP route 引入 + "W2/W3 harden" + kernelsnitch 大改 + W2/W3 改三轮 retry 链 + `pselect_child_node`/perf leak 流程调整），具体哪一处杀的 W2 未定位。另一个未排除假说：perf_find_task 泄漏到错误 task（写入落了但 verify 读的 child 不对）。
-- **止血措施（2026-09-26 已部署 v15）**：so + manifest ghostlock 组回滚到 08-19 验证态——so=83856B/22 内核（6.12+6.6 系，含小米 17 全家），manifest v15 按旧 so 内核表过滤（52→22 设备），`?v=15`。丢掉的 30 设备（6.1/Tensor/后续新增）等修复后恢复。
-- **永久修复方向**：`util.c` 三字段改 **route 条件化**——`tcp ? SLIDE_INIT_TASK : INIT_TASK`（TCP 路线=Tensor 证据支持 alias；pselect 非 compact=v13 实测支持 image）。修好 W1 后 W2 若仍挂，再按上面窗口查 09-10 diff。
+- **止血→根治（2026-09-26）**：先部署 v15 回滚（08-19 so）止血；同日 TA 否决回滚方案（丢新设备）→ **v16 forward fix**：上游 10001ae1 全量源码 + `scripts/ghostlock-local-0923.patch`（LMK 定制 + constructor 入库 + W1 视图修复）本地重建，so=110832B/48 内核表（与 v14 逐串一致），manifest v16 恢复全部 52 设备，`?v=16`。修复内容：`util.c` 三字段改 `tcp ? SLIDE_INIT_TASK : INIT_TASK`（TCP/Tensor 保 alias，pselect/QCOM 恢复 image），新增日志 `payload task view: kernel image|direct-map alias` 可在真机日志确认修复版在跑。
+- **v16 附带还清的交接债**：08-19 手动构建注入的 constructor+unsetenv（`ghostlock_preload_init`）从未入库——v14 的 so 里也有此符号但 patch/脚本都没有，属于"能跑但不可复现"。现已入 patch，`build-ghostlock.sh` 同步重写（pin 到 UPSTREAM_REF=10001ae1）。
+- **W2 残留风险（未解）**：v16 只修 W1。小米 17 在 09-16 基线上还有"W1 过、W2 挂"的遗留回归（窗口=fork→09-10 的 949 行 diff，根因未定位）。v16 若复现此症状（日志走到 `W2: cred` 反复重试但 `child uid` 不变），下一步按 §10 P2 排查。
 
 ### 7.2 蓝牙掉配对（已知机理，非 bug）
 提权时 SELinux enforcing↔permissive 反复横跳 + `load_policy` 热重载 → 蓝牙栈内存态丢失 link key → 连接需重新 SSP 配对。**新版不改善**，是临时 root 的固有代价。
@@ -137,27 +138,27 @@ CVE-2026-43499 的 pselect 路线在 5.10 不可行：pselect fd_set 与 futex w
 
 ## 8. 部署与回滚
 
-- 部署：改 `so/ghostlock.so` + `manifest.json` → contents API PUT（二进 base64，需带当前文件 sha + `branch=main`）；本地 clone 直接 `git push` 等效
-- 回滚：读旧 commit 的内容覆盖 `main`（分文件提交）
-- **当前稳定基线（v15，2026-09-26 起）**：08-19 验证版（so 83856 / 22 内核 / manifest v15 / `?v=15`）。旧基线"09-10（so 72432 / v11）"**未经小米 17 全链验证**，勿再作为回退目标。
+- 构建：`scripts/build-ghostlock.sh`（clone 上游 → pin `UPSTREAM_REF` → apply `ghostlock-local-0923.patch` → NDK/ONDK clang 编译）；patch 与基线强绑定，换基线必须手动重放并重新生成 patch
+- 部署：`git push`（so + manifest 同步，`?v=` 递增破缓存）
+- **当前线上基线（v16，2026-09-26 起）**：so 110832 / 48 内核 / 52 设备 / `?v=16`。历史回退点：v15=e1b7033（08-19 so，22 设备，小米 17 全链验证态）、v14=8433218（W1 回归版，勿回退）。
 
 ---
 
 ## 9. 测试方法
 
-1. 改完线上后**等约 10 分钟**（GitHub Pages CDN 缓存），用**无痕窗口**打开；确认 manifest 显示 v15（`exploit.js` 用 `cache: "no-store"` 拉 manifest，so 靠 `?v=` 破缓存）
+1. 改完线上后**等约 10 分钟**（GitHub Pages CDN 缓存），用**无痕窗口**打开；确认 manifest 是 v16
 2. 先**重启手机**再测（成功率最高）；两次测试间隔 ≥ 5 分钟
-3. 日志判读：`[+] SELinux permissive` = W1 成功；`[+] child is root!` / KernelSU 激活 = 成功；`pselect success=1` **不代表**写入落点正确（只是 consumer 侧 sched_setattr 成功）
+3. 日志判读：`payload task view: kernel image`（QCOM 设备应见此行，确认 v16 修复版在跑）→ `[+] SELinux permissive` = W1 成功 → `[+] child is root!` / KernelSU 激活 = 成功；`pselect success=1` **不代表**写入落点正确（只是 consumer 侧 sched_setattr 成功）
 
 ---
 
 ## 10. 待办（TODO）
 
-1. **[P0-已止血]** v15 回滚已部署，等真机复测小米 17（预期恢复 08-19 全链行为）
-2. **[P1]** 永久修复：`util.c` 三字段 route 条件化（`tcp ? SLIDE_INIT_TASK : INIT_TASK`）+ 本地重建 50 内核 so → 恢复被裁掉的 30 设备；重建前需 NDK（ONDK r30.1 / android-ndk-r29+）
-3. **[P2]** W2 回归根因定位：fork→09-10 的 949 行 diff（TCP route / W2W3 harden / kernelsnitch / 三轮 retry 链）；可用二分构建法（fork core + 新内核表不可行——缺 compact/TCP 字段，需逐段 cherry-pick）
-4. **[P3]** 向 `YuKongA/ghostlock-app` 提 issue：9e750039 的 alias 改动在 QCOM 6.12 非 compact pselect 上破坏 W1（证据见 §7.1），建议 route 条件化
-5. **[P1]** APK `RootTool` 同步 50 内核继续冻结，直到上游修复 9e750039（APK 现 src=09-16 基线，**不含** W1 回归，但含 W2 疑点）
+1. **[P0]** v16 真机复测小米 17：预期 W1 恢复（时间线上回到 09-16 行为）；若 W2 仍挂（`W2: cred` 重试但 `child uid` 不变），进入 P2
+2. **[P2]** W2 回归根因定位：上游 fork→09-10 的 949 行 diff（TCP route / W2W3 harden / kernelsnitch / 三轮 retry 链）；候选假说：perf_find_task 泄漏错 task
+3. **[P3]** 向 `YuKongA/ghostlock-app` 提 issue：9e750039 alias 改动破坏 QCOM 6.12 非 compact pselect 的 W1（证据见 §7.1），建议 route 条件化
+4. **[P1]** APK `RootTool` 同步解冻条件达成（上游修复或自带 route 条件化）：同步到 ≥10001ae1 时需重放 v16 的视图修复
+5. 上游 09-25/09-26 又有新提交（PD2361 multicast geometry 等），下次 sync 时注意重新审查 core 改动
 
 ---
 
