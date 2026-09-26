@@ -2,6 +2,12 @@
 # Build ghostlock.so for the web root (all local customizations in one patch)
 # Usage: ./scripts/build-ghostlock.sh [--commit]
 #
+# IMPORTANT: the web so is a PIE EXECUTABLE (upstream Makefile flow:
+# -fPIE -pie + llvm-strip), NOT a -shared library. ?v=13/?v=14 proven builds
+# are PIE; the v16 experiment used -shared (build-ghostlock.sh's old line)
+# which changed TLS/init layout — an uncontrolled variable. Do not use
+# -shared again without re-testing.
+#
 # Patch (scripts/ghostlock-local-0923.patch) is bound to upstream baseline
 # 10001ae1 (09-23). On a new upstream sync: re-apply the hunks manually,
 # regenerate the patch, and bump ?v= in manifest.json.
@@ -11,10 +17,8 @@
 #   2. usleep(5000) every 8 forks                  (LMK: fork throttle)
 #   3. prepare_ctx early cleanup + dedup fail paths
 #   4. main.c: ghostlock_preload_init constructor + unsetenv(LD_PRELOAD)
-#      (web entry; was injected ad-hoc for the 08-19 build, now tracked)
 #   5. util.c: route-conditional task-pointer view (tcp -> direct-map alias,
-#      pselect -> kernel image) — fixes the v14 W1 regression on QCOM 6.12
-#      (upstream 9e750039 broke non-compact pselect with aliases)
+#      pselect -> kernel image) — W1 regression fix attempt (unconfirmed)
 
 set -euo pipefail
 
@@ -70,18 +74,16 @@ fi
 
 echo "Compiler: $NDK_CC"
 
-# Build ghostlock.so (shared library with constructor for LD_PRELOAD)
+# Build ghostlock web binary (PIE, constructor rides INIT_ARRAY)
 SRCS="src/core/main.c src/core/offsets_json.c src/core/util.c src/core/fops.c"
 CFLAGS="-O2 -flto -Wall -Wno-unused-parameter -Wno-sign-compare -Wno-unused-function \
   -Isrc/core -Isrc/kernels -DTARGET_CONFIG_H=\"target.h\""
-LDFLAGS="-shared -fPIC -flto -pthread -Wl,-init,_init -Wl,-fini,_fini"
+LDFLAGS="-fPIE -pie -pthread -flto"
 
-echo "Compiling..."
-$NDK_CC $CFLAGS $LDFLAGS $SRCS -o ghostlock.so
-
-# Copy to myroot so/
-mkdir -p "$(dirname "$OUTPUT")"
-cp ghostlock.so "$OUTPUT"
+echo "Compiling (PIE executable, then strip)..."
+$NDK_CC $CFLAGS $LDFLAGS $SRCS -o ghostlock
+$NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip ghostlock 2>/dev/null || strip ghostlock
+cp ghostlock "$OUTPUT"
 
 echo "=== Build complete: $OUTPUT ==="
 ls -la "$OUTPUT"

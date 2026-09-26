@@ -122,11 +122,18 @@ cp ghostlock ghostlock_vNN.so && $NDK/llvm-strip ghostlock_vNN.so
   | 09-10 / 09-16 so | #127+#138+#121 | ❌ W1 过、W2 挂（`child uid=10478` 不变） |
   | 09-24 v14 so | 10001ae1（含 9e750039） | ❌ **W1 都挂** + 一次 panic（09-26 实测 3 次：2 次 120s 超时卡在 W1 attempt、1 次卡死重启） |
 
-- **W1 回归根因（已锤定）**：上游 `9e750039`（09-17，"Add Pixel 9 Pro"）把 `util.c` payload 三个字段 `waiter_task`/`task_group`/`pi_top_task` 从 **image 视图**（`INIT_TASK`=`ffffffc0…`）改成 **direct-map alias 视图**（`SLIDE_INIT_TASK`=`ffffff80…`），注释声称 "aliases are dereferenceable on every SoC"。**该论断对 QCOM 6.12 非 compact pselect 路线不成立**——alias 地址本身可写（W1 target 一直是 alias 形式），但 PI 链上 planted task 指针与内核自持的 image 形式指针做身份比较时分叉，erase 写入不再落到 target（`success=1` 只是 consumer 的 sched_setattr 成功，不是写入验证）。v13→v14 之间这是**唯一**碰 `src/core` 的提交（逐 commit 核对过文件列表）。
+- **W1 回归首版归因（v16 复测后修正：三字段 alias 是**嫌疑**而非实锤根因）**：上游 `9e750039`（09-17，"Add Pixel 9 Pro"）把 `util.c` payload 三个字段 `waiter_task`/`task_group`/`pi_top_task` 从 **image 视图**（`INIT_TASK`=`ffffffc0…`）改成 **direct-map alias 视图**（`SLIDE_INIT_TASK`=`ffffff80…`）。v13→v14 之间它是唯一碰 `src/core` 的提交（逐 commit 核对过文件列表）——这是事实；但"alias 破坏 PI 链"的机制推断（planted task 指针与 image 形式指针身份比较分叉）**未被 v16 复测证实**（image 视图回退后 W1 仍挂），v16 的挂更可能由构建形态差异（-shared）引入。注意 `success=1` 只是 consumer 的 sched_setattr 成功，不是写入验证——这条判读依然成立。
 - **W2 回归（根因仍未定，#127 嫌疑已撤）**：09-16 时代归咎 #127 是**错的**——#127 只改 compact 字表（`relink_pc` 那组），小米 17 走非 compact；非 compact 的 W0 payload 布局、W1/W2 调用参数（mode/leaf）、写入字表在 fork(08-17)→09-16 之间**文本上完全没变**。真正的回归窗口是 **fork→09-10 的 949 行大 diff**（TCP route 引入 + "W2/W3 harden" + kernelsnitch 大改 + W2/W3 改三轮 retry 链 + `pselect_child_node`/perf leak 流程调整），具体哪一处杀的 W2 未定位。另一个未排除假说：perf_find_task 泄漏到错误 task（写入落了但 verify 读的 child 不对）。
 - **止血→根治（2026-09-26）**：先部署 v15 回滚（08-19 so）止血；同日 TA 否决回滚方案（丢新设备）→ **v16 forward fix**：上游 10001ae1 全量源码 + `scripts/ghostlock-local-0923.patch`（LMK 定制 + constructor 入库 + W1 视图修复）本地重建，so=110832B/48 内核表（与 v14 逐串一致），manifest v16 恢复全部 52 设备，`?v=16`。修复内容：`util.c` 三字段改 `tcp ? SLIDE_INIT_TASK : INIT_TASK`（TCP/Tensor 保 alias，pselect/QCOM 恢复 image），新增日志 `payload task view: kernel image|direct-map alias` 可在真机日志确认修复版在跑。
 - **v16 附带还清的交接债**：08-19 手动构建注入的 constructor+unsetenv（`ghostlock_preload_init`）从未入库——v14 的 so 里也有此符号但 patch/脚本都没有，属于"能跑但不可复现"。现已入 patch，`build-ghostlock.sh` 同步重写（pin 到 UPSTREAM_REF=10001ae1）。
 - **W2 残留风险（未解）**：v16 只修 W1。小米 17 在 09-16 基线上还有"W1 过、W2 挂"的遗留回归（窗口=fork→09-10 的 949 行 diff，根因未定位）。v16 若复现此症状（日志走到 `W2: cred` 反复重试但 `child uid` 不变），下一步按 §10 P2 排查。
+- **v16 复测结果（09-26 16:31）：W1 仍挂，且发现归因错误**。日志确认 `payload task view: kernel image`（修复在跑）但 W1 pselect 依旧 success=1 不落——**三字段 alias 不是根因**（或不是唯一根因）。随即取证发现**真正的未控制变量：构建形态**——?v=13（W1 过）与 v14（W1 挂）都是 **PIE executable + stripped + NDK r29**（上游 Makefile 流程），而 v16 误用了 build-ghostlock.sh 的 `-shared` 形态（v15 滚出时一度把 08-19 so 的符号误读为 v14 的）。v16 = shared 形态，引入了新变量，"三字段回退"的效果被形态差异掩盖，无法判读。
+- **v17 三版对照实验（09-26 部署，判据见 §9）**：
+  | manifest 条目 | 文件 | 构成 | 测试目的 |
+  |---|---|---|---|
+  | Xiaomi 17（主条目） | `ghostlock.so?v=17`（81336B） | PIE + 09-23 源码 + 全定制 + 三字段回退 | 修复假说 |
+  | 【校准：08-19 原版】 | `ghostlock-cal.so`（83856B） | 62fdf84 原字节 | **环境校准**：今天手机还能不能全链（排除系统更新/Firefox 漂移） |
+  | 【对照B：无字段回退】 | `ghostlock-b.so`（81272B） | PIE + 同定制 + 上游原样 alias | 区分"PIE 形态"vs"三字段回退"哪个起效 |
 
 ### 7.2 蓝牙掉配对（已知机理，非 bug）
 提权时 SELinux enforcing↔permissive 反复横跳 + `load_policy` 热重载 → 蓝牙栈内存态丢失 link key → 连接需重新 SSP 配对。**新版不改善**，是临时 root 的固有代价。
@@ -140,15 +147,25 @@ CVE-2026-43499 的 pselect 路线在 5.10 不可行：pselect fd_set 与 futex w
 
 - 构建：`scripts/build-ghostlock.sh`（clone 上游 → pin `UPSTREAM_REF` → apply `ghostlock-local-0923.patch` → NDK/ONDK clang 编译）；patch 与基线强绑定，换基线必须手动重放并重新生成 patch
 - 部署：`git push`（so + manifest 同步，`?v=` 递增破缓存）
-- **当前线上基线（v16，2026-09-26 起）**：so 110832 / 48 内核 / 52 设备 / `?v=16`。历史回退点：v15=e1b7033（08-19 so，22 设备，小米 17 全链验证态）、v14=8433218（W1 回归版，勿回退）。
+- **当前线上基线（v17 三版对照，2026-09-26 起）**：主 `ghostlock.so?v=17`（PIE+回退，81336B/48 内核）+ `ghostlock-cal.so`（08-19 原版校准）+ `ghostlock-b.so`（无回退对照）。历史回退点：v15=e1b7033（08-19 so，22 设备）、v16=a13c4c8（-shared 形态，已弃）
 
 ---
 
-## 9. 测试方法
+## 9. 测试方法（v17 三版对照判读）
 
-1. 改完线上后**等约 10 分钟**（GitHub Pages CDN 缓存），用**无痕窗口**打开；确认 manifest 是 v16
-2. 先**重启手机**再测（成功率最高）；两次测试间隔 ≥ 5 分钟
-3. 日志判读：`payload task view: kernel image`（QCOM 设备应见此行，确认 v16 修复版在跑）→ `[+] SELinux permissive` = W1 成功 → `[+] child is root!` / KernelSU 激活 = 成功；`pselect success=1` **不代表**写入落点正确（只是 consumer 侧 sched_setattr 成功）
+**v17 实验判读表**（三版同时在线，设备选择器里选不同条目测）：
+
+| 先测 | 结果 | 结论 → 下一步 |
+|---|---|---|
+| 【校准：08-19 原版】 | ❌ 挂 | **环境已变**（系统更新/Firefox/内核侧），停止代码侧折腾，转上游跟踪或换设备 |
+| 【校准】✅ → 主条目（A：PIE+回退） | ✅ | 三字段 alias 实锤为根因，修复成立；再测 B 确认 |
+| 主条目 ✅ → 【对照B：无回退】 | ✅ | **构建形态是根因**（v14 的挂另有隐情），三字段回退无效；可考虑给上游提形态无关 issue |
+| 主条目 ❌ B ❌（校准 ✅） | — | 09-23 源码内还有别的杀手（9e750039 之外）——回到 git 二分，窗口=09-16→09-23 的 kernel 表新增或 e7b81 重建表 |
+
+一般规程：
+1. 改完线上后**等约 10 分钟**（CDN），**无痕窗口**，确认 manifest 版本号
+2. 先**重启手机**再测；两次测试间隔 ≥ 5 分钟
+3. 日志判读：`payload task view: kernel image`（A 版）/"upstream alias (control build B)"（B 版）确认各自在跑；`[+] SELinux permissive` = W1 过；`pselect success=1` ≠ 写入落点正确
 
 ---
 
