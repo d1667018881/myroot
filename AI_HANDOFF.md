@@ -128,12 +128,16 @@ cp ghostlock ghostlock_vNN.so && $NDK/llvm-strip ghostlock_vNN.so
 - **v16 附带还清的交接债**：08-19 手动构建注入的 constructor+unsetenv（`ghostlock_preload_init`）从未入库——v14 的 so 里也有此符号但 patch/脚本都没有，属于"能跑但不可复现"。现已入 patch，`build-ghostlock.sh` 同步重写（pin 到 UPSTREAM_REF=10001ae1）。
 - **W2 残留风险（未解）**：v16 只修 W1。小米 17 在 09-16 基线上还有"W1 过、W2 挂"的遗留回归（窗口=fork→09-10 的 949 行 diff，根因未定位）。v16 若复现此症状（日志走到 `W2: cred` 反复重试但 `child uid` 不变），下一步按 §10 P2 排查。
 - **v16 复测结果（09-26 16:31）：W1 仍挂，且发现归因错误**。日志确认 `payload task view: kernel image`（修复在跑）但 W1 pselect 依旧 success=1 不落——**三字段 alias 不是根因**（或不是唯一根因）。随即取证发现**真正的未控制变量：构建形态**——?v=13（W1 过）与 v14（W1 挂）都是 **PIE executable + stripped + NDK r29**（上游 Makefile 流程），而 v16 误用了 build-ghostlock.sh 的 `-shared` 形态（v15 滚出时一度把 08-19 so 的符号误读为 v14 的）。v16 = shared 形态，引入了新变量，"三字段回退"的效果被形态差异掩盖，无法判读。
-- **v17 三版对照实验（09-26 部署，判据见 §9）**：
-  | manifest 条目 | 文件 | 构成 | 测试目的 |
-  |---|---|---|---|
-  | Xiaomi 17（主条目） | `ghostlock.so?v=17`（81336B） | PIE + 09-23 源码 + 全定制 + 三字段回退 | 修复假说 |
-  | 【校准：08-19 原版】 | `ghostlock-cal.so`（83856B） | 62fdf84 原字节 | **环境校准**：今天手机还能不能全链（排除系统更新/Firefox 漂移） |
-  | 【对照B：无字段回退】 | `ghostlock-b.so`（81272B） | PIE + 同定制 + 上游原样 alias | 区分"PIE 形态"vs"三字段回退"哪个起效 |
+- **v17 三版对照实验（09-26 部署）→ 18:39 定案**：
+  | 条目 | 结果 |
+  |---|---|
+  | 校准（08-19 原字节，-shared） | ✅ **全链成功**（环境没变，排除环境漂移） |
+  | A（PIE + 09-23 core + 三字段回退） | ❌ W1 挂 |
+  | D（?v=13 原字节） | ❌ **W1 挂**——9/16 那次"W1 过"不可复现，是 15 次尝试里的运气 |
+  | C（**自建 09-16 core 复刻**，PIE） | ✅ **全链成功**（W1 5.7s 一击、W2 retry-2 `child is root`、late-load `exit=0`、**跳转 KernelSU App 显示成功**） |
+
+- **定案**：① 构建形态（PIE/-shared）**不是**变量（08-19 shared ✅、?13 PIE 今天 ❌、C PIE ✅）；② 三字段 alias **不是**根因（A 回退后仍挂）；③ **W1 杀手窗口 = 08-17→09-16 的 core diff**（fork→09-10 的 949 行 + #127 + #138）；④ ?v=13 本身不稳（D 原字节今天挂），C 与 D 的 128B 差异（当年构建的定制重放内容 vs 我们的重放）是 C 成 D 败的直接原因——**待挖 P2**。
+- **v19（09-26 19:3x 部署，线上逐字节验证毕）**：主 `ghostlock.so?v=19`（80632B）= **C 的成功配方 + 09-23 全部 50 内核表**（09-16 core 1145ef2d + 10001ae1 kernels + LMK + constructor，PIE+strip）——新设备支持恢复、小米 17 全链配方固化。构建配方已 pin 进 `build-ghostlock.sh`（CORE_REF/KERNELS_REF），patch 重新生成。
 
 ### 7.2 蓝牙掉配对（已知机理，非 bug）
 提权时 SELinux enforcing↔permissive 反复横跳 + `load_policy` 热重载 → 蓝牙栈内存态丢失 link key → 连接需重新 SSP 配对。**新版不改善**，是临时 root 的固有代价。
@@ -171,11 +175,11 @@ CVE-2026-43499 的 pselect 路线在 5.10 不可行：pselect fd_set 与 futex w
 
 ## 10. 待办（TODO）
 
-1. **[P0]** v16 真机复测小米 17：预期 W1 恢复（时间线上回到 09-16 行为）；若 W2 仍挂（`W2: cred` 重试但 `child uid` 不变），进入 P2
-2. **[P2]** W2 回归根因定位：上游 fork→09-10 的 949 行 diff（TCP route / W2W3 harden / kernelsnitch / 三轮 retry 链）；候选假说：perf_find_task 泄漏错 task
-3. **[P3]** 向 `YuKongA/ghostlock-app` 提 issue：9e750039 alias 改动破坏 QCOM 6.12 非 compact pselect 的 W1（证据见 §7.1），建议 route 条件化
-4. **[P1]** APK `RootTool` 同步解冻条件达成（上游修复或自带 route 条件化）：同步到 ≥10001ae1 时需重放 v16 的视图修复
-5. 上游 09-25/09-26 又有新提交（PD2361 multicast geometry 等），下次 sync 时注意重新审查 core 改动
+1. **[P0]** v19 主条目复测确认（C 配方 + 50 表，预期与 C 一致全链成功）；确认后清掉实验条目（校准/A/B/C/D）
+2. **[P2]** C vs D 的 128B 差异挖矿：反汇编对比定位当年 ?v=13 构建与复刻的定制差异（spray 参数？constructor 形态？）——弄清"当年构建引入了什么坑"
+3. **[P2]** 09-16→09-23 core 的 W1 杀手精确定位（当年判 9e750039 已证伪）：二分 fork→09-10 的 949 行 diff（TCP route / W2W3 harden / kernelsnitch / retry 链）；定位后可考虑向上游提 issue 或把 09-16 core 的关键部分前向移植
+4. **[P1]** 6.1 compact 设备（TCP route）在 09-16 core 上回归验证——v19 用 09-16 core，若 Tensor/6.1 用户报障需评估
+5. 上游持续有新提交，下次 sync 只取 kernels/（表），core 冻结在 1145ef2d 直到 W1 杀手定位
 
 ---
 
