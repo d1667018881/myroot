@@ -8,9 +8,15 @@
 # which changed TLS/init layout — an uncontrolled variable. Do not use
 # -shared again without re-testing.
 #
-# Patch (scripts/ghostlock-local-0923.patch) is bound to upstream baseline
-# 10001ae1 (09-23). On a new upstream sync: re-apply the hunks manually,
-# regenerate the patch, and bump ?v= in manifest.json.
+# Patch (scripts/ghostlock-local-0923.patch) is bound to the tree state
+# "10001ae1 + checkout 1145ef2d -- src/core" (09-16 core, 09-23 kernels).
+# On a new upstream sync: redo the core/kernels checkout, re-apply hunks,
+# regenerate the patch, bump ?v=, and re-verify on Xiaomi 17.
+#
+# WHY 09-16 core: the 09-23 core (949-line fork->0910 diff + #127/#138 +
+# 9e750039) fails W1 on QCOM 6.12 non-compact; every 09-23-core build
+# (v14/v16/A/B) failed on-device while 09-16-core replica C succeeded
+# full-chain (2026-09-26 controlled experiment, see AI_HANDOFF 7.1).
 #
 # Customizations included:
 #   1. MM_PARTIALS 5 -> 2, prepare_ctx 8x -> 5x   (LMK: fewer forks)
@@ -26,7 +32,8 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_DIR="$(dirname "$SCRIPT_DIR")"
 WORK_DIR="$REPO_DIR/build-ghostlock"
 PATCH_FILE="$SCRIPT_DIR/ghostlock-local-0923.patch"
-UPSTREAM_REF="10001ae1"
+CORE_REF="1145ef2d"   # 09-16: last core proven stable (C experiment, 2026-09-26)
+KERNELS_REF="10001ae1" # 09-23: all 50 kernel tables (data-only)
 OUTPUT="$REPO_DIR/so/ghostlock.so"
 
 # ONDK setup
