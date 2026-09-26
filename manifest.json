@@ -1,6 +1,6 @@
 {
-  "version": 17,
-  "note": "v17 三版对照实验（定位 W1 杀手）：主条目=A(PIE构建+三字段回退)；【校准】=08-19全链验证原版；【B】=PIE无回退对照。v16 的 -shared 构建形态是未控制变量（?v=13/?v=14 均为 PIE），已废弃",
+  "version": 18,
+  "note": "v18 实验追加：C=09-16复刻（自建构建链）/ D=?v=13 原字节（d1604f3 so）；与已有 校准(08-19)/A(09-23+回退)/B(09-23无回退) 构成完整判别矩阵",
   "groups": [
     {
       "id": "ghostlock",
@@ -37,6 +37,28 @@
           "source": "YuKongA/ghostlock-app",
           "sourceUrl": "https://github.com/YuKongA/ghostlock-app",
           "verified": false,
+          "vendor": "xiaomi",
+          "brand": "小米"
+        },
+        {
+          "name": "Xiaomi 17【实验C：09-16 复刻】",
+          "kernel": "6.12.23-android16-5-g75e9b1c7ae7c-abogki463945075-4k",
+          "so": "so/ghostlock-c.so",
+          "spawn": true,
+          "source": "YuKongA/ghostlock-app",
+          "sourceUrl": "https://github.com/YuKongA/ghostlock-app",
+          "verified": true,
+          "vendor": "xiaomi",
+          "brand": "小米"
+        },
+        {
+          "name": "Xiaomi 17【实验D：?13 原字节】",
+          "kernel": "6.12.23-android16-5-g75e9b1c7ae7c-abogki463945075-4k",
+          "so": "so/ghostlock-d.so",
+          "spawn": true,
+          "source": "YuKongA/ghostlock-app",
+          "sourceUrl": "https://github.com/YuKongA/ghostlock-app",
+          "verified": true,
           "vendor": "xiaomi",
           "brand": "小米"
         },
