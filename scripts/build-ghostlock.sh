@@ -33,7 +33,7 @@ REPO_DIR="$(dirname "$SCRIPT_DIR")"
 WORK_DIR="$REPO_DIR/build-ghostlock"
 PATCH_FILE="$SCRIPT_DIR/ghostlock-local-0923.patch"
 CORE_REF="1145ef2d"   # 09-16: last core proven stable (C experiment, 2026-09-26)
-KERNELS_REF="10001ae1" # 09-23: all 50 kernel tables (data-only)
+KERNELS_REF="3bd95d3"  # 09-25: 50 kernel tables incl TB375FC/TB323FU (data-only)
 OUTPUT="$REPO_DIR/so/ghostlock.so"
 
 # ONDK setup

