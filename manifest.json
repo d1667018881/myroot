@@ -1,6 +1,6 @@
 {
   "version": 21,
-  "note": "v21：吸收上游 3 新提交（IQOO 12/TB375FC/TB323FU，全部仅表改动 50 表）+ 任务视图 route 条件化——pselect/QCOM 用 image 视图（C 版实证）、TCP/Tensor 用 direct-map alias（上游 9e750039 形态，6.1.162 Tensor G4 需要）。修复 Pixel 9a/9 Pro 在 09-16 core 下的纸面支持缺口",
+  "note": "v21：上游 3 提交吸收（50 表）+ TCP/Tensor 走 alias 视图（上游 9e750039 形态）；小米 17（唯一真机实测凭据）物理钉死 v19 原字节 so——manifest 逐设备路由 so，零风险分层",
   "groups": [
     {
       "id": "ghostlock",
@@ -10,7 +10,7 @@
         {
           "name": "Xiaomi 17 / 17 Pro / 17 Pro Max / 17 Ultra  ✅实测",
           "kernel": "6.12.23-android16-5-g75e9b1c7ae7c-abogki463945075-4k",
-          "so": "so/ghostlock.so?v=21",
+          "so": "so/ghostlock-v19.so?v=19",
           "spawn": true,
           "source": "YuKongA/ghostlock-app",
           "sourceUrl": "https://github.com/YuKongA/ghostlock-app",
