@@ -138,6 +138,14 @@ cp ghostlock ghostlock_vNN.so && $NDK/llvm-strip ghostlock_vNN.so
 
 - **定案**：① 构建形态（PIE/-shared）**不是**变量（08-19 shared ✅、?13 PIE 今天 ❌、C PIE ✅）；② 三字段 alias **不是**根因（A 回退后仍挂）；③ **W1 杀手窗口 = 08-17→09-16 的 core diff**（fork→09-10 的 949 行 + #127 + #138）；④ ?v=13 本身不稳（D 原字节今天挂），C 与 D 的 128B 差异（当年构建的定制重放内容 vs 我们的重放）是 C 成 D 败的直接原因——**待挖 P2**。
 - **v19（09-26 19:3x 部署，线上逐字节验证毕）**：主 `ghostlock.so?v=19`（80632B）= **C 的成功配方 + 09-23 全部 50 内核表**（09-16 core 1145ef2d + 10001ae1 kernels + LMK + constructor，PIE+strip）——新设备支持恢复、小米 17 全链配方固化。构建配方已 pin 进 `build-ghostlock.sh`（CORE_REF/KERNELS_REF），patch 重新生成。
+- **v21 静态验证链（09-27 13:2x，无 6.1 真机，TA 授权自主定案）**——六环证据：
+  ① C 语义：`tcp ? SLIDE_X : X` 在 tcp=0 求值=原常量（v19 行为，语言级保证，pselect 路线零语义变化）；
+  ② 取值域：`tcp_route_selected()` 返回 bool（`GHOSTLOCK_TCP_ROUTE=0` 强制 pselect，否则表字段 `compact_waiter`）∈{0,1}；
+  ③ 路由数据：6.1 宏全家 `compact_waiter=1`（Tensor/tcp→alias），6.12/6.6 宏不带（默认 0，QCOM/pselect→image）——按内核线天然分流，50 表零改动自动正确；
+  ④ 模式同构：条件化三行与同函数上游既有 5 处 `tcp ? A : B`（SKB_DELTA/chunk_bias/cred_copy_off 等）同构，非发明新模式；
+  ⑤ 二进制落点：csel 61→68、指令 9366→9415（+49=三字段常量装载+csel），条件选择确认进产物（v19/v21 字节 diff 因 LTO 布局漂移不可用，改用指令级）；
+  ⑥ 上游自证：9e750039 注释原话"the tcp route already uses SLIDE_INIT_TASK the same way"——TCP 路径用 SLIDE 视图是上游自己的一致做法，Tensor G4 的 alias 是必需（commit message）。
+  **结论**：v21 对小米 17（pselect）语言级等价于 v19，对 6.1 家族从"纸面必挂"变"上游 09-23+ 事实形态"。判据=期望值严格占优，保持 v21 上线。首台 6.1 真机（vivo T4/Pixel 9/红魔/TB375FC）验证时留意 W1 日志。
 - **v21（09-27 13:1x，吸收上游 + 堵 6.1.162 适配缺口）**：上游 09-25 三新提交（IQOO 12 / TB375FC / TB323FU）**零 core 改动**按配方安全吸收，表 48→50、设备 52→55。同时修复真适配缺口：Pixel 9a/9 Pro（6.1.162 Tensor G4）在 09-16 core 下是纸面支持——上游 9e750039 的 alias 改动正是为 Tensor G4 的 Image 特殊加载方式而生（commit message 明说）。落 **route 条件化**（v16 思路 + C 版实证 core）：pselect/QCOM→image 视图（小米 17 实证）、TCP/Tensor→alias 视图（上游 9e750039 形态）。81304B/50 表，线上 cmp 验证毕。**注意：route 条件化后 TCP 路线的行为与上游 09-16 时代不同（老 Tensor 从 image 切 alias，上游论据=同物理页无害）——首台 6.1 设备真机验证时留意**。
 - **v20（09-26 20:2x 收尾）**：TA 真机复测 v19 确认**全链成功**（W2 数十秒完成；"日志短"= 成功得快，失败版才把 120s 超时跑满后 dump 尾部）。实验条目与实验 so（cal/a/b/c/d）已清（git 可回溯：v17=eae306b / v18=02d9602），manifest v20 = 52 设备。
 
