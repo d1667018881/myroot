@@ -9,7 +9,7 @@
 # -shared again without re-testing.
 #
 # Patch (scripts/ghostlock-local-0923.patch) is bound to the tree state
-# "10001ae1 + checkout 1145ef2d -- src/core" (09-16 core, 09-23 kernels).
+# "3bd95d3 + checkout 1145ef2d -- src/core" (09-16 core, 09-25 kernels, 50 tables).
 # On a new upstream sync: redo the core/kernels checkout, re-apply hunks,
 # regenerate the patch, bump ?v=, and re-verify on Xiaomi 17.
 #
@@ -107,7 +107,7 @@ sed -i "s|so/ghostlock.so?v=[0-9]*|so/ghostlock.so?v=$NEW|g" "$MANIFEST"
 if [ "${1:-}" = "--commit" ]; then
   cd "$REPO_DIR"
   git add so/ghostlock.so manifest.json scripts/
-  git commit -m "ghostlock.so: rebuild from upstream 10001ae1 + local patch [skip ci]" || true
+  git commit -m "ghostlock.so: rebuild from upstream 3bd95d3 + local patch [skip ci]" || true
   echo "Committed. Push with: git push origin main"
 fi
 
