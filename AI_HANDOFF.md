@@ -2,7 +2,7 @@
 
 > 面向接手的 AI / 开发者的**技术交接**。
 > 同一项目的 **APK 版**（私有仓库 `RootTool`）有对应文档：`RootTool/AI_HANDOFF.md`，两份内容互补、互相引用。
-> 最后更新：2026-09-25
+> 最后更新：~~2026-09-25~~ 2026-10-10（v21 双 so 钉死 + 上游换代核查 + 基线全面刷新）
 
 ---
 
@@ -24,7 +24,8 @@
 | `index.html` / `ansi.js` | 页面与终端 UI |
 | `exploit.js` | Firefox JIT 漏洞链（stage 1–9）+ 上传 so + LD_PRELOAD spawn + 轮询取日志 |
 | `manifest.json` | 设备表（分组 GhostLock / IonStack）；每项含 `kernel` / `so` 引用 / `spawn` / `vendor` 等 |
-| `so/ghostlock.so` | 核心提权 so（编译产物，见 §5） |
+| `so/ghostlock.so` | 核心提权 so（v21，编译产物，见 §5） |
+| `so/ghostlock-v19.so` | **小米 17 专用钉死文件**（v19 原字节 80632B，与 2026-09-26 五轮对照实验全链成功的 so 逐字节 cmp 相同，git b68828c）——**实测凭据载体，永远不许改动/重建/覆盖** |
 
 ---
 
@@ -32,7 +33,7 @@
 
 | 来源 | 用途 |
 |---|---|
-| `YuKongA/ghostlock-app` | **核心**：`src/core/*.c` + `src/kernels/*`（偏移表）→ 编译成 `ghostlock.so` |
+| `YuKongA/ghostlock-app` | **核心**：`src/core/*.c` + `src/kernels/*`（偏移表）→ 编译成 `ghostlock.so`。**⚠️ 2026-09-28 核查：上游 main 已架构换代（native C 全量重写为 C++23、48 张 C 表全删换成 HOCON profile）——main 不再可直接取用，构建必须 pin 到冻结 ref（见 §5）** |
 | `hexo141/Rootme`（搬运 `NebuSec/CyberMeowfia`） | manifest 的 **IonStack 组** 10 个 .so |
 | `woshimaniubi8/CVE-2026-43499-root-KernelSU` | 预编译 so（小米14 beryl / K70 rodin） |
 
@@ -58,41 +59,37 @@
 
 ---
 
-## 4. 当前状态（基线）
+## 4. 当前状态（基线，2026-10-10 刷新）
 
 | 项 | 值 |
 |---|---|
-| `so/ghostlock.so` | **81208 字节**，md5 `0746cb98e2f9d0b800290c5b0be016b8`（记为 **so v14**）|
-| `manifest.json` | version **14**，`?v=14`，共 **62 设备**（GhostLock 52 + IonStack 10）|
-| 同步基线 | 上游 HEAD `10001ae1`（2026-09-23，**50 内核**）|
-| 上一版 | v13 = so 80104 / `?v=13`（**在小米 17 上有 W2 回归，见 §6.1**）|
-| **稳定回退基线** | 09-10 版 = so **72432** / manifest v11 / `?v=12`（用户实测可用）|
+| `so/ghostlock.so`（主） | **81304 字节** = **v21**（09-16 core 冻结 + 09-23 全部 50 内核表 + route 条件化，见 §7.1 v21 节）|
+| `so/ghostlock-v19.so`（钉死） | **80632 字节** = v19 原字节（09-26 真机五轮实验全链成功配方，专供小米 17，**永不改动**）|
+| `manifest.json` | version **21**：小米 17（唯一实测凭据设备）→ `so/ghostlock-v19.so?v=19`；其余 **54 设备** → `so/ghostlock.so?v=21`。共 **55 设备**（GhostLock 45 + IonStack 10）|
+| core 冻结基线 | 上游 `1145ef2d`（2026-09-16 core）+ `10001ae1`（2026-09-23 kernels/表）——build-ghostlock.sh 内 pin |
+| 上游状态 | **main 已换代**（09-28 核查：C++23 重写 + HOCON 表，见 §2/§10），冻结 ref 之外不可直接取用 |
+| ~~v14 基线（已过时留档）~~ | ~~so 81208B / manifest v14 / 62 设备（09-25）~~ → 已被 v19/v21 双 so 架构取代 |
 
 ---
 
 ## 5. 构建 so（可复现）
 
+> **⚠️ 上游换代警告（2026-09-28 核查）**：上游 main 的 `src/kernels/*/offsets.h` 已**全部删除**（换 HOCON profile），`src/core` 已重写为 C++23。**照老流程拉 main tarball 必然构建失败/产出行为不可知的二进制**。构建必须 pin 到冻结 ref。
+> ~~原流程：curl main.tar.gz → 覆盖编译区 → 重打定制~~（已失效，仅留档）
+
 ```bash
-# 1) 取上游源码
-cd /tmp && curl -sL -o up.tar.gz \
-  "https://codeload.github.com/YuKongA/ghostlock-app/tar.gz/refs/heads/main"
-mkdir up && tar xzf up.tar.gz -C up
+# 推荐路径：直接用仓库内已 pin 的脚本（CORE_REF=1145ef2d / KERNELS_REF=10001ae1）
+bash scripts/build-ghostlock.sh          # clone 上游 → checkout 冻结 ref → apply patch → 编译 → strip
 
+# 手动等价流程（理解用）：
+# 1) clone 上游后 checkout 冻结 ref（不许用 main！）
+#    git clone https://github.com/YuKongA/ghostlock-app && git checkout 10001ae1
+#    → core 取 1145ef2d（09-16）、kernels 取 10001ae1（09-23 全部 50 表）
 # 2) 覆盖到编译区
-cd <workdir>/ghostlock-build
-cp -r /tmp/up/ghostlock-app-main/src/core/.    src/core/
-cp -r /tmp/up/ghostlock-app-main/src/kernels/. src/kernels/
-# 3) 重打 §6 的三处定制（common.h / util.c / main.c）
-
-# 4) 编译（产出 PIE 可执行文件）
-export ANDROID_NDK_HOME=<path>/android-ndk-r29
-make            # SRCS = src/core/{main.c,offsets_json.c,util.c,fops.c}
-
-# 5) 去符号得到 .so
-NDK=$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin
-cp ghostlock ghostlock_vNN.so && $NDK/llvm-strip ghostlock_vNN.so
-
-# 6) 部署：cp 到 so/ghostlock.so，并递增 manifest 的 ?v=
+# 3) 重打 §6 的三处定制（common.h / util.c / main.c）——或直接 apply scripts/ghostlock-local-0923.patch
+# 4) 编译（NDK r29，产出 PIE 可执行文件） make   # SRCS = src/core/{main.c,offsets_json.c,util.c,fops.c}
+# 5) llvm-strip 去符号
+# 6) 部署到 so/ghostlock.so 并递增 manifest ?v=——**注意：产物只覆盖主 so，so/ghostlock-v19.so 是实测凭据钉死文件，任何构建流程都不得触碰它**
 ```
 
 > 部署用 GitHub contents API（二进制走 base64）；**so 与 manifest 分两次提交**（合并易超时）。改了 so 必须递增 `?v=`，否则浏览器/CDN 用旧缓存。
@@ -148,6 +145,7 @@ cp ghostlock ghostlock_vNN.so && $NDK/llvm-strip ghostlock_vNN.so
   **结论**：v21 对小米 17（pselect）语言级等价于 v19，对 6.1 家族从"纸面必挂"变"上游 09-23+ 事实形态"。判据=期望值严格占优，保持 v21 上线。首台 6.1 真机（vivo T4/Pixel 9/红魔/TB375FC）验证时留意 W1 日志。
 - **v21（09-27 13:1x，吸收上游 + 堵 6.1.162 适配缺口）**：上游 09-25 三新提交（IQOO 12 / TB375FC / TB323FU）**零 core 改动**按配方安全吸收，表 48→50、设备 52→55。同时修复真适配缺口：Pixel 9a/9 Pro（6.1.162 Tensor G4）在 09-16 core 下是纸面支持——上游 9e750039 的 alias 改动正是为 Tensor G4 的 Image 特殊加载方式而生（commit message 明说）。落 **route 条件化**（v16 思路 + C 版实证 core）：pselect/QCOM→image 视图（小米 17 实证）、TCP/Tensor→alias 视图（上游 9e750039 形态）。81304B/50 表，线上 cmp 验证毕。**注意：route 条件化后 TCP 路线的行为与上游 09-16 时代不同（老 Tensor 从 image 切 alias，上游论据=同物理页无害）——首台 6.1 设备真机验证时留意**。
 - **v20（09-26 20:2x 收尾）**：TA 真机复测 v19 确认**全链成功**（W2 数十秒完成；"日志短"= 成功得快，失败版才把 120s 超时跑满后 dump 尾部）。实验条目与实验 so（cal/a/b/c/d）已清（git 可回溯：v17=eae306b / v18=02d9602），manifest v20 = 52 设备。
+- **双 so 钉死（09-27 13:16 TA 确认"小米 17 实测可以了"之后落地，61667da）**：TA 风险偏好=实测凭据最值钱，"实测过的别动"——v21 虽有六环语义等价证明，TA 仍要求小米 17 走原字节。落地：`so/ghostlock-v19.so`（80632B，与 b68828c 提交的 v19 so 逐字节 cmp 相同，即 TA 09-26 20:21 确认成功时线上的同一串字节）；manifest 逐设备路由 so——小米 17 条目 → `ghostlock-v19.so?v=19`，其余 54 → `ghostlock.so?v=21`。**字节链闭环**：v19 提交 18:42 → TA 确认 20:21（间隔 99 分钟）→ v20 清理未动 so → 钉死文件 cmp 全等。线上验证：v19 文件 80632B 线上==本地 ✓、manifest 路由 1→v19 + 54→v21 ✓。**红线：ghostlock-v19.so 永不重建/覆盖/移动；任何 manifest 改动不得把小米 17 条目的 so 字段改走 v21**。
 
 ### 7.2 蓝牙掉配对（已知机理，非 bug）
 提权时 SELinux enforcing↔permissive 反复横跳 + `load_policy` 热重载 → 蓝牙栈内存态丢失 link key → 连接需重新 SSP 配对。**新版不改善**，是临时 root 的固有代价。
@@ -159,15 +157,17 @@ CVE-2026-43499 的 pselect 路线在 5.10 不可行：pselect fd_set 与 futex w
 
 ## 8. 部署与回滚
 
-- 构建：`scripts/build-ghostlock.sh`（clone 上游 → pin `UPSTREAM_REF` → apply `ghostlock-local-0923.patch` → NDK/ONDK clang 编译）；patch 与基线强绑定，换基线必须手动重放并重新生成 patch
+- 构建：`scripts/build-ghostlock.sh`（clone 上游 → pin `CORE_REF=1145ef2d / KERNELS_REF=10001ae1` → apply `ghostlock-local-0923.patch` → NDK/ONDK clang 编译）；patch 与基线强绑定，换基线必须手动重放并重新生成 patch。**上游 main 已换代（09-28 核查），换基线前先读 §10 待办第 2 条**
 - 部署：`git push`（so + manifest 同步，`?v=` 递增破缓存）
-- **当前线上基线（v17 三版对照，2026-09-26 起）**：主 `ghostlock.so?v=17`（PIE+回退，81336B/48 内核）+ `ghostlock-cal.so`（08-19 原版校准）+ `ghostlock-b.so`（无回退对照）。历史回退点：v15=e1b7033（08-19 so，22 设备）、v16=a13c4c8（-shared 形态，已弃）
+- **当前线上基线（v21 双 so 架构，2026-09-27 起）**：主 `ghostlock.so?v=21`（81304B/50 表，PIE+strip，54 设备）+ `ghostlock-v19.so?v=19`（80632B 原字节，小米 17 专用，永不改动）。~~v17 对照期基线（主 ?v=17 + cal/b 实验件）~~ 实验件已于 v20 清理，git 可回溯（v17=eae306b / v18=02d9602）。历史回退点：v15=e1b7033（08-19 so，22 设备）、v16=a13c4c8（-shared 形态，已弃）、v19=b68828c（小米 17 实测配方，=钉死文件）
 
----
+## 9. 测试方法（判读规程）
 
-## 9. 测试方法（v17 三版对照判读）
+**当前线上判读**（v21 双 so）：
+- 小米 17 走 v19 原字节——日志应与 09-26 成功轮一致（W1 一击 5.7s 量级、W2 数十秒、late-load exit=0）。**若小米 17 突然失败，先怀疑环境（系统更新/Firefox 版本），不是 so**——它的字节从未变过
+- 其余设备走 v21 条件化：pselect/QCOM 路线日志应见 `payload task view: kernel image`，TCP/Tensor（6.1 家族）应见 alias 形态；首台 6.1 真机验证时留意 W1（§7.1 v21 节的注意项）
 
-**v17 实验判读表**（三版同时在线，设备选择器里选不同条目测）：
+~~**v17 实验判读表**（三版同时在线，设备选择器里选不同条目测）~~（实验件已清，判读表留档备用——若再做对照实验可参考此表结构）：
 
 | 先测 | 结果 | 结论 → 下一步 |
 |---|---|---|
@@ -186,10 +186,15 @@ CVE-2026-43499 的 pselect 路线在 5.10 不可行：pselect fd_set 与 futex w
 ## 10. 待办（TODO）
 
 1. ~~[P0]~~ **已完成**（v19/v20 真机确认全链成功，实验条目已清）
-2. **[P2]** C vs D 的 128B 差异挖矿：反汇编对比定位当年 ?v=13 构建与复刻的定制差异（spray 参数？constructor 形态？）——弄清"当年构建引入了什么坑"
-3. **[P2]** 09-16→09-23 core 的 W1 杀手精确定位（当年判 9e750039 已证伪）：二分 fork→09-10 的 949 行 diff（TCP route / W2W3 harden / kernelsnitch / retry 链）；定位后可考虑向上游提 issue 或把 09-16 core 的关键部分前向移植
-4. **[P1]** 6.1 compact 设备（TCP route）在 09-16 core 上回归验证——v19 用 09-16 core，若 Tensor/6.1 用户报障需评估
-5. 上游持续有新提交，下次 sync 只取 kernels/（表），core 冻结在 1145ef2d 直到 W1 杀手定位
+2. **[P1·等 TA 拍板] 上游换代应对（2026-09-28 核查，TA 指令原文："如果是修复某些功能的跟我说，等我确认之后再更新"）**：
+   - 上游 main 09-23→09-28 变化 = **架构换代**：native C 全量重写为 C++23（route 管线化/namespace 化）、48 张 C 表全删换 64 张 HOCON profile（字段与 C offsets.h 一一对应已抽查确认，可翻译）；分支名 very-not-stable-dev，merge 进 main 于 09-28 09:03
+   - 上游功能修复清单（在新架构里）：futex 表按 possible CPUs 计数（对部分 W1 失败可能有利）/ KernelSU 已加载跳过注入 / cred 引用计数上限 / multicast 竞态两连修 / root 脚本路径 EFAULT 修复 / Xperia 1 V 5.15 内核线支持
+   - 稳定性信号**红**：上游门禁记录有同构建 PASS→panic→PASS 循环、多轮 revert
+   - 已给 TA 三选项（09-28 汇报）：**A 不动（我推荐，v21 55 设备独立运转不受影响）** / B 只翻译吸收新设备表（~14 张新表，无实测） / C 跟进新架构（不建议）。**TA 尚未拍板，拍板前什么都不做**
+3. **[P2]** C vs D 的 128B 差异挖矿：反汇编对比定位当年 ?v=13 构建与复刻的定制差异（spray 参数？constructor 形态？）——弄清"当年构建引入了什么坑"
+4. **[P2]** 09-16→09-23 core 的 W1 杀手精确定位（当年判 9e750039 已证伪）：二分 fork→09-10 的 949 行 diff（TCP route / W2W3 harden / kernelsnitch / retry 链）；定位后可考虑向上游提 issue 或把 09-16 core 的关键部分前向移植
+5. **[P1]** 6.1 compact 设备（TCP route）在 09-16 core 上回归验证——v19/v21 用 09-16 core + route 条件化，若 Tensor/6.1 用户报障需评估
+6. ~~上游持续有新提交，下次 sync 只取 kernels/（表），core 冻结在 1145ef2d 直到 W1 杀手定位~~ **已失效（09-28 换代核查）：上游 kernels/*/offsets.h 已全删，"只取表"无从谈起。新表要经 HOCON→C offsets 翻译（字段一一对应，§10.2 选项 B）；core 冻结在 1145ef2d 直到 W1 杀手定位不变**
 
 ---
 
