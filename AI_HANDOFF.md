@@ -2,7 +2,7 @@
 
 > 面向接手的 AI / 开发者的**技术交接**。
 > 同一项目的 **APK 版**（私有仓库 `RootTool`）有对应文档：`RootTool/AI_HANDOFF.md`，两份内容互补、互相引用。
-> 最后更新：~~2026-09-25~~ 2026-10-10（v21 双 so 钉死 + 上游换代核查 + 基线全面刷新）
+> 最后更新：~~2026-09-25~~ ~~2026-10-10（v21 双 so 钉死 + 上游换代核查 + 基线全面刷新）~~ 2026-10-16（v22：9 张新表翻译吸收，59 表/74 设备，翻译管线工具化见 §5.5）
 
 ---
 
@@ -25,6 +25,8 @@
 | `exploit.js` | Firefox JIT 漏洞链（stage 1–9）+ 上传 so + LD_PRELOAD spawn + 轮询取日志 |
 | `manifest.json` | 设备表（分组 GhostLock / IonStack）；每项含 `kernel` / `so` 引用 / `spawn` / `vendor` 等 |
 | `so/ghostlock.so` | 核心提权 so（v21，编译产物，见 §5） |
+| `kernels-local/` | 翻译管线产物：上游 HOCON 表→C offsets.h（9 张，见 §5.5）|
+| `tools-local/translate_kernels.py` | HOCON→C 表翻译器（字段映射内置家族默认）|
 | `so/ghostlock-v19.so` | **小米 17 专用钉死文件**（v19 原字节 80632B，与 2026-09-26 五轮对照实验全链成功的 so 逐字节 cmp 相同，git b68828c）——**实测凭据载体，永远不许改动/重建/覆盖** |
 
 ---
@@ -59,15 +61,16 @@
 
 ---
 
-## 4. 当前状态（基线，2026-10-10 刷新）
+## 4. 当前状态（基线，2026-10-16 v22 刷新）
 
 | 项 | 值 |
 |---|---|
-| `so/ghostlock.so`（主） | **81304 字节** = **v21**（09-16 core 冻结 + 09-25 全部 50 内核表 + route 条件化，见 §7.1 v21 节）|
+| `so/ghostlock.so`（主） | **83272 字节** = **v22**（09-16 core 冻结 + 09-25 的 50 表 + kernels-local 翻译 9 张新表 = **59 表**；线上 cmp 逐字节验证毕 2026-10-16）|
 | `so/ghostlock-v19.so`（钉死） | **80632 字节** = v19 原字节（09-26 真机五轮实验全链成功配方，专供小米 17，**永不改动**）|
-| `manifest.json` | version **21**：GhostLock 组 **55 台**——小米 17（唯一实测凭据设备）→ `so/ghostlock-v19.so?v=19`，其余 **54 台** → `so/ghostlock.so?v=21`；IonStack 组 **10 台**走各自独立 so。**共 65 设备**（实测 2026-10-11 清点）|
-| core 冻结基线 | 上游 `1145ef2d`（2026-09-16 core）+ `3bd95d3`（2026-09-25 kernels/表，50 张含 TB375FC/TB323FU/IQOO12）——build-ghostlock.sh 内 pin（CORE_REF/KERNELS_REF 变量）|
-| 上游状态 | **main 已换代**（09-28 核查：C++23 重写 + HOCON 表，见 §2/§10），冻结 ref 之外不可直接取用 |
+| `manifest.json` | version **22**：GhostLock 组 **64 台**——小米 17（唯一实测凭据设备）→ `so/ghostlock-v19.so?v=19`，其余 **63 台** → `so/ghostlock.so?v=22`；IonStack 组 **10 台**走各自独立 so。**共 74 设备**（实测清点）|
+| core 冻结基线 | 上游 `1145ef2d`（2026-09-16 core）+ `3bd95d3`（2026-09-25 kernels/表，50 张）+ **`kernels-local/` 9 张翻译表**（HOCON→C，10-16 翻译管线见 §5.5）——build-ghostlock.sh 内 pin（CORE_REF/KERNELS_REF 变量）|
+| 上游状态 | **main 已换代**（09-28 核查：C++23 重写 + HOCON 表）；10-16 复查：换代后 47 提交零 panic/revert 信号，表池 64→73 HOCON，已翻译吸收其中 9 张（5.15 家族 6 张不翻=C++ core 专属路线）|
+| ~~v21 基线（10-16 前留档）~~ | ~~so 81304B / manifest v21 / 65 设备（GhostLock 55 + IonStack 10）~~ → v22 起被 59 表/74 设备取代 |
 | ~~v14 基线（已过时留档）~~ | ~~so 81208B / manifest v14 / 62 设备（09-25）~~ → 已被 v19/v21 双 so 架构取代 |
 
 ---
@@ -96,6 +99,23 @@ bash scripts/build-ghostlock.sh          # clone 上游 → checkout 冻结 ref 
 ```
 
 > 部署用 GitHub contents API（二进制走 base64）；**so 与 manifest 分两次提交**（合并易超时）。改了 so 必须递增 `?v=`，否则浏览器/CDN 用旧缓存。
+
+### 5.5 新表翻译管线（上游 09-28 换代后的取表通道，2026-10-16 建立）
+
+上游 C 表已死（换 HOCON），"取表"= 翻译。**全流程工具化**，勿手搓：
+
+```bash
+# ① 导出上游新 HOCON 表（先 git fetch && 对比 3bd95d3 的表差量，5.15 家族跳过）
+git -C /tmp/upstream-gl show origin/main:app/src/main/assets/kernel_profiles/<release>.conf > /tmp/hocon_pool/<release>.conf
+# ② 翻译（HOCON→C offsets.h；字段映射已对 3bd95d3 C-core 逐一验证）
+python3 tools-local/translate_kernels.py /tmp/hocon_pool kernels-local/
+# ③ 构建会自动 merge（scripts/merge_local_kernels.py 把 kernels-local/ 注册进 known_offsets）
+bash scripts/build-ghostlock.sh
+# ④ manifest 新设备条目：python json 追加（参考 git log 2405f4b 的注入脚本），
+#    设备名从上游 docs/kernel_profiles/SUPPORTED_DEVICES.md 提取 release→设备映射
+```
+
+映射规则（验证记录）：`release→uname_r`；`kernel_phys_load`（非 null）→ `.kernel_phys_load`（main.c:112 直接生效）；`route.select_stack.waiter_shift`→`.pselect_waiter_shift`（null 时按家族默认显式写：6.1=1 / 6.6=-2 / 6.12=0）；`offset.{init_task 等 9 项}`→`.off_*`；`task_struct.*`（15 项）→`.task_*`（与家族宏默认相同时省略）；`kernelsnitch.mm_struct_sz`≠家族默认才写。**丢弃**：`kernel_phys_offset`（C core 硬编码 P0_PHYS_OFFSET=0x80000000 无表级字段；50 张老表同样不带——行为一致零新增风险）、`empty_zero_page`、`cred.*`（C++ core 专属 cred 伪造参数）、`kernelsnitch.collisions`、`fallback.*`。**语法红线：表文件结尾必须是 `),`（数组元素逗号）不是 `);`——v22 构建时踩过，`);` 会把 known_offsets 数组提前终结产生 11 个级联编译错。**5.15 家族不翻**（C++ core 专属路线，冻结 C core 不支持）。
 
 ---
 
@@ -193,7 +213,8 @@ CVE-2026-43499 的 pselect 路线在 5.10 不可行：pselect fd_set 与 futex w
    - 上游 main 09-23→09-28 变化 = **架构换代**：native C 全量重写为 C++23（route 管线化/namespace 化）、48 张 C 表全删换 64 张 HOCON profile（字段与 C offsets.h 一一对应已抽查确认，可翻译）；分支名 very-not-stable-dev，merge 进 main 于 09-28 09:03
    - 上游功能修复清单（在新架构里）：futex 表按 possible CPUs 计数（对部分 W1 失败可能有利）/ KernelSU 已加载跳过注入 / cred 引用计数上限 / multicast 竞态两连修 / root 脚本路径 EFAULT 修复 / Xperia 1 V 5.15 内核线支持
    - 稳定性信号**红**：上游门禁记录有同构建 PASS→panic→PASS 循环、多轮 revert
-   - 已给 TA 三选项（09-28 汇报）：**A 不动（我推荐，v21 65 设备独立运转不受影响）** / B 只翻译吸收新设备表（~14 张新表，无实测） / C 跟进新架构（不建议）。**TA 尚未拍板，拍板前什么都不做**
+   - 已给 TA 三选项（09-28 汇报）：A 不动（我推荐，~~v21 65 设备~~ 现 74 设备独立运转不受影响）/ B 只翻译吸收新设备表 / C 跟进新架构（不建议）。
+   - **10-16 拍板：TA 授权"你看着搞吧"→ B 选项执行完毕**。10-16 复查上游稳定（47 提交零 panic）后翻译吸收 9 张有效表（5.15×6 跳过），v22 上线（2405f4b）；RootTool 同步 16 张表（7 老差量+9 新翻译）出 v14。后续上游新表按 §5.5 管线增量吸收，core 冻结不变
 3. **[P2]** C vs D 的 128B 差异挖矿：反汇编对比定位当年 ?v=13 构建与复刻的定制差异（spray 参数？constructor 形态？）——弄清"当年构建引入了什么坑"
 4. **[P2]** 09-16→09-23 core 的 W1 杀手精确定位（当年判 9e750039 已证伪）：二分 fork→09-10 的 949 行 diff（TCP route / W2W3 harden / kernelsnitch / retry 链）；定位后可考虑向上游提 issue 或把 09-16 core 的关键部分前向移植
 5. **[P1]** 6.1 compact 设备（TCP route）在 09-16 core 上回归验证——v19/v21 用 09-16 core + route 条件化，若 Tensor/6.1 用户报障需评估
