@@ -52,15 +52,33 @@ if [ ! -d "$WORK_DIR" ]; then
 fi
 
 cd "$WORK_DIR"
-git checkout -- .
-git checkout main
-git fetch origin main 2>/dev/null || true
-# pin to the baseline the patch is bound to
-git checkout -q "$UPSTREAM_REF" 2>/dev/null || git pull --ff-only origin main 2>/dev/null || true
+# reset any previous build's local modifications & extra table dirs, then
+# pin to the baseline the patch is bound to (deterministic two-step checkout:
+# kernels tree @ 09-25, then core rolled back to the frozen 09-16 state).
+# NOTE: upstream main has been rewritten (C++23 + HOCON) since 09-28; never
+# build from main directly.
+git checkout -q -- . 2>/dev/null || true
+git clean -qfd src/kernels/ 2>/dev/null || true
+git checkout -q "$KERNELS_REF"
+git checkout -q "$CORE_REF" -- src/core
+git status --short | head -5 || true
 
 # Apply local patch
 echo "Applying local patch..."
 git apply --verbose "$PATCH_FILE"
+
+# Merge locally-translated kernel tables (HOCON -> C offsets, see
+# tools-local/translate_kernels.py; upstream dropped the C-table format when
+# it moved to C++23/HOCON on 09-28, so new tables arrive via translation).
+if ls "$REPO_DIR"/kernels-local/*/offsets.h >/dev/null 2>&1; then
+  echo "Merging local kernel tables..."
+  for d in "$REPO_DIR"/kernels-local/*/; do
+    name="$(basename "$d")"
+    mkdir -p "src/kernels/$name"
+    cp "$d/offsets.h" "src/kernels/$name/offsets.h"
+  done
+  python3 "$SCRIPT_DIR/merge_local_kernels.py"
+fi
 
 # Find NDK clang
 if [ -n "${ONDK_HOME:-}" ] && [ -d "$ONDK_HOME" ]; then
@@ -89,7 +107,7 @@ LDFLAGS="-fPIE -pie -pthread -flto"
 
 echo "Compiling (PIE executable, then strip)..."
 $NDK_CC $CFLAGS $LDFLAGS $SRCS -o ghostlock
-$NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip ghostlock 2>/dev/null || strip ghostlock
+"$(dirname "$NDK_CC")/llvm-strip" ghostlock 2>/dev/null || strip ghostlock
 cp ghostlock "$OUTPUT"
 
 echo "=== Build complete: $OUTPUT ==="
