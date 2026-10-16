@@ -1,5 +1,5 @@
 {
-  "version": 21,
+  "version": 22,
   "note": "v21：上游 3 提交吸收（50 表）+ TCP/Tensor 走 alias 视图（上游 9e750039 形态）；小米 17（唯一真机实测凭据）物理钉死 v19 原字节 so——manifest 逐设备路由 so，零风险分层",
   "groups": [
     {
