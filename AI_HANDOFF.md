@@ -222,6 +222,22 @@ CVE-2026-43499 的 pselect 路线在 5.10 不可行：pselect fd_set 与 futex w
 
 ---
 
-## 11. 关联文档
+## 11. 小米 17 OS4.0.4.0（Android 17）内核分析结论（2026-10-17，TA 未升级前预备分析）
+
+**结论：GhostLock 在该系统不可用，不建表不建 so。** CVE-2026-43499（futex PI rtmutex UAF）的内核修复已包含在新内核中，提权原语失效——这是漏洞本体被修，不是偏移适配问题。
+
+| 项 | 值 |
+|---|---|
+| OTA 包 | pudding-ota_full-OS4.0.4.0.XPCCNXM-user-17.0（8474255878B，TA 提供链接，本地 `/home/z/xiaomi17_ota/`）|
+| 新内核 | `6.12.69-android16-6-g43b5ab7e247d-abogki561813157-4k`（现系统 6.12.23）|
+| 证据链（三重独立） | ① ghostlock-extract exit 6（AlreadyFixed：remove_waiter@0x1229738 never reads current）② 独立反汇编：函数体 0x0–0x224（PACIASP 序言 + AUTIASP/RET 尾声边界实锤）内零条 `mrs xN, s3_0_c4_c1_0`；扫到的 4 条全在下一函数 ③ 上游 README Preflight 节官方口径：已修复内核专用 exit 6 拒绝 |
+| 上游 roadmap | 架构 runtime 化方向，**无新 CVE 替代路线计划** |
+| 对策（已告知 TA） | 不升级继续用 v19 / 升级则 KernelSU 刷 boot（永久 root，TA 本来就是 KernelSU 用户）|
+
+工具链沉淀（本地可复用）：`~/.cargo` + RootTool `tools/extract_rs/target/release/ghostlock-extract`（cargo build 产物）。**新内核 OTA 直读分析流程**：`ghostlock-extract <ota.zip> --format c --name <dev> --work-dir <dir> --no-disasm`——exit 6=漏洞已修（分析终止）；exit 0 出 C 表走 §5.5 管线。OTA 8.4GB 与解包件留在 `/home/z/xiaomi17_ota/`（验证后可删）。v19 与主 so 本次全程未触碰。
+
+---
+
+## 12. 关联文档
 
 - APK 侧交接：私有仓库 **`RootTool`** → `AI_HANDOFF.md`（含 CI 构建、签名、extract_rs、本地卡刷包解析等）
